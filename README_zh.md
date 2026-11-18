@@ -3,7 +3,7 @@
 [English](README.md) | **中文**
 
 U3LogicAnalyzer 是配套 CH32H417 / CH569 USB 逻辑分析仪的 PC 上位机软件，基于
-PulseView 0.5.0 修改，内置裁剪后的 sigrok 软件栈（libsigrok + libsigrokdecode），
+PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigrokdecode），
 支持 **130 种协议解码**（I²C / SPI / UART 等）。
 
 ![U3LogicAnalyzer 连接 CH32H417 分析仪在 macOS 上运行](docs/images/u3logic-analyzer-macos.png)
@@ -11,6 +11,8 @@ PulseView 0.5.0 修改，内置裁剪后的 sigrok 软件栈（libsigrok + libsi
 ## 功能特性
 
 - **硬件支持**：CH32H417（USB3.0，最高 200MHz 采样）、CH569 热插拔检测
+- **完整 libsigrok 驱动集**：FX2LAFW/Saleae Logic、DreamSourceLab、Hantek、
+  串口万用表/电源、SCPI 仪器等
   - Windows：原厂 CH375 驱动模式（CH375DLL）
   - macOS / Linux：驱动内置 **libusb 传输层**，无需任何内核驱动（协议参考
     WCH 官方 CH37X_LINUX SDK）
@@ -64,7 +66,7 @@ macOS（Homebrew）：
 
 ```bash
 brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
-             libzip boost python@3.14
+             libserialport libftdi nettle libzip boost python@3.14
 ```
 
 Linux（Debian/Ubuntu 示例，包名以发行版为准）：
@@ -158,7 +160,9 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 
 1. **U3 定制全量同步**：品牌改名为 U3LogicAnalyzer、中文界面、CH32H417/CH569
    设备支持、IAP 固件升级对话框、解码通道分配对话框、深色主题、新图标、
-   中文本地化翻译。
+   中文本地化翻译。内置 libsigrok 已恢复为完整上游驱动集
+   （FX2LAFW/Saleae、DreamSourceLab、Hantek、串口/SCPI 仪器等）并保留
+   CH32H417 驱动，上位机启动时扫描全部驱动。
 2. **macOS / Linux 适配**：
    - `build_macos.sh` 一键构建（libsigrok → libsigrokcxx → libsigrokdecode →
      LogicAnalyzer）

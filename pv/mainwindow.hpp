@@ -219,6 +219,7 @@ private:
 	bool usb_snapshot_initialized_ = false;
 	bool usb_error_reported_ = false;
 	bool reconnect_requires_selection_ = false;
+	bool force_device_refresh_ = false;
 	PresenceChange pending_presence_change_ = PresenceChange::Unchanged;
 	int device_scan_retries_ = 0;
 	bool application_menu_initialized_ = false;

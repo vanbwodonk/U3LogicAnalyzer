@@ -30,6 +30,7 @@ const DataType DataType::_UINT64_RANGE = DataType(SR_T_UINT64_RANGE, "UINT64_RAN
 const DataType DataType::_DOUBLE_RANGE = DataType(SR_T_DOUBLE_RANGE, "DOUBLE_RANGE");
 const DataType DataType::_INT32 = DataType(SR_T_INT32, "INT32");
 const DataType DataType::_MQ = DataType(SR_T_MQ, "MQ");
+const DataType DataType::_UINT32 = DataType(SR_T_UINT32, "UINT32");
 const DataType * const DataType::UINT64 = &DataType::_UINT64;
 const DataType * const DataType::STRING = &DataType::_STRING;
 const DataType * const DataType::BOOL = &DataType::_BOOL;
@@ -41,6 +42,7 @@ const DataType * const DataType::UINT64_RANGE = &DataType::_UINT64_RANGE;
 const DataType * const DataType::DOUBLE_RANGE = &DataType::_DOUBLE_RANGE;
 const DataType * const DataType::INT32 = &DataType::_INT32;
 const DataType * const DataType::MQ = &DataType::_MQ;
+const DataType * const DataType::UINT32 = &DataType::_UINT32;
 template<> const SR_API std::map<const enum sr_datatype, const DataType * const> EnumValue<DataType, enum sr_datatype>::_values = {
 	{SR_T_UINT64, DataType::UINT64},
 	{SR_T_STRING, DataType::STRING},
@@ -53,6 +55,7 @@ template<> const SR_API std::map<const enum sr_datatype, const DataType * const>
 	{SR_T_DOUBLE_RANGE, DataType::DOUBLE_RANGE},
 	{SR_T_INT32, DataType::INT32},
 	{SR_T_MQ, DataType::MQ},
+	{SR_T_UINT32, DataType::UINT32},
 };
 const PacketType PacketType::_HEADER = PacketType(SR_DF_HEADER, "HEADER");
 const PacketType PacketType::_END = PacketType(SR_DF_END, "END");
@@ -550,6 +553,16 @@ const ConfigKey ConfigKey::_CONTINUOUS = ConfigKey(SR_CONF_CONTINUOUS, "CONTINUO
 const ConfigKey ConfigKey::_DATALOG = ConfigKey(SR_CONF_DATALOG, "DATALOG");
 const ConfigKey ConfigKey::_DEVICE_MODE = ConfigKey(SR_CONF_DEVICE_MODE, "DEVICE_MODE");
 const ConfigKey ConfigKey::_TEST_MODE = ConfigKey(SR_CONF_TEST_MODE, "TEST_MODE");
+const ConfigKey ConfigKey::_DELAY_GENERATOR = ConfigKey(SR_CONF_DELAY_GENERATOR, "DELAY_GENERATOR");
+const ConfigKey ConfigKey::_FREQUENCY_COUNTER = ConfigKey(SR_CONF_FREQUENCY_COUNTER, "FREQUENCY_COUNTER");
+const ConfigKey ConfigKey::_PROBE_NAMES = ConfigKey(SR_CONF_PROBE_NAMES, "PROBE_NAMES");
+const ConfigKey ConfigKey::_OVER_CURRENT_PROTECTION_DELAY = ConfigKey(SR_CONF_OVER_CURRENT_PROTECTION_DELAY, "OVER_CURRENT_PROTECTION_DELAY");
+const ConfigKey ConfigKey::_INVERTED = ConfigKey(SR_CONF_INVERTED, "INVERTED");
+const ConfigKey ConfigKey::_OVER_POWER_PROTECTION_ENABLED = ConfigKey(SR_CONF_OVER_POWER_PROTECTION_ENABLED, "OVER_POWER_PROTECTION_ENABLED");
+const ConfigKey ConfigKey::_OVER_POWER_PROTECTION_ACTIVE = ConfigKey(SR_CONF_OVER_POWER_PROTECTION_ACTIVE, "OVER_POWER_PROTECTION_ACTIVE");
+const ConfigKey ConfigKey::_OVER_POWER_PROTECTION_THRESHOLD = ConfigKey(SR_CONF_OVER_POWER_PROTECTION_THRESHOLD, "OVER_POWER_PROTECTION_THRESHOLD");
+const ConfigKey ConfigKey::_RESISTANCE = ConfigKey(SR_CONF_RESISTANCE, "RESISTANCE");
+const ConfigKey ConfigKey::_GATE_TIME = ConfigKey(SR_CONF_GATE_TIME, "GATE_TIME");
 const ConfigKey ConfigKey::_HOT_PLUG = ConfigKey(SR_CONF_HOT_PLUG, "HOT_PLUG");
 const ConfigKey ConfigKey::_TRIGGER_OFFSET = ConfigKey(SR_CONF_TRIGGER_OFFSET, "TRIGGER_OFFSET");
 const ConfigKey ConfigKey::_THRESHOLD_VALUE_1 = ConfigKey(SR_CONF_THRESHOLD_VALUE_1, "THRESHOLD_VALUE_1");
@@ -662,6 +675,16 @@ const ConfigKey * const ConfigKey::CONTINUOUS = &ConfigKey::_CONTINUOUS;
 const ConfigKey * const ConfigKey::DATALOG = &ConfigKey::_DATALOG;
 const ConfigKey * const ConfigKey::DEVICE_MODE = &ConfigKey::_DEVICE_MODE;
 const ConfigKey * const ConfigKey::TEST_MODE = &ConfigKey::_TEST_MODE;
+const ConfigKey * const ConfigKey::DELAY_GENERATOR = &ConfigKey::_DELAY_GENERATOR;
+const ConfigKey * const ConfigKey::FREQUENCY_COUNTER = &ConfigKey::_FREQUENCY_COUNTER;
+const ConfigKey * const ConfigKey::PROBE_NAMES = &ConfigKey::_PROBE_NAMES;
+const ConfigKey * const ConfigKey::OVER_CURRENT_PROTECTION_DELAY = &ConfigKey::_OVER_CURRENT_PROTECTION_DELAY;
+const ConfigKey * const ConfigKey::INVERTED = &ConfigKey::_INVERTED;
+const ConfigKey * const ConfigKey::OVER_POWER_PROTECTION_ENABLED = &ConfigKey::_OVER_POWER_PROTECTION_ENABLED;
+const ConfigKey * const ConfigKey::OVER_POWER_PROTECTION_ACTIVE = &ConfigKey::_OVER_POWER_PROTECTION_ACTIVE;
+const ConfigKey * const ConfigKey::OVER_POWER_PROTECTION_THRESHOLD = &ConfigKey::_OVER_POWER_PROTECTION_THRESHOLD;
+const ConfigKey * const ConfigKey::RESISTANCE = &ConfigKey::_RESISTANCE;
+const ConfigKey * const ConfigKey::GATE_TIME = &ConfigKey::_GATE_TIME;
 const ConfigKey * const ConfigKey::HOT_PLUG = &ConfigKey::_HOT_PLUG;
 const ConfigKey * const ConfigKey::TRIGGER_OFFSET = &ConfigKey::_TRIGGER_OFFSET;
 const ConfigKey * const ConfigKey::THRESHOLD_VALUE_1 = &ConfigKey::_THRESHOLD_VALUE_1;
@@ -775,6 +798,16 @@ template<> const SR_API std::map<const enum sr_configkey, const ConfigKey * cons
 	{SR_CONF_DATALOG, ConfigKey::DATALOG},
 	{SR_CONF_DEVICE_MODE, ConfigKey::DEVICE_MODE},
 	{SR_CONF_TEST_MODE, ConfigKey::TEST_MODE},
+	{SR_CONF_DELAY_GENERATOR, ConfigKey::DELAY_GENERATOR},
+	{SR_CONF_FREQUENCY_COUNTER, ConfigKey::FREQUENCY_COUNTER},
+	{SR_CONF_PROBE_NAMES, ConfigKey::PROBE_NAMES},
+	{SR_CONF_OVER_CURRENT_PROTECTION_DELAY, ConfigKey::OVER_CURRENT_PROTECTION_DELAY},
+	{SR_CONF_INVERTED, ConfigKey::INVERTED},
+	{SR_CONF_OVER_POWER_PROTECTION_ENABLED, ConfigKey::OVER_POWER_PROTECTION_ENABLED},
+	{SR_CONF_OVER_POWER_PROTECTION_ACTIVE, ConfigKey::OVER_POWER_PROTECTION_ACTIVE},
+	{SR_CONF_OVER_POWER_PROTECTION_THRESHOLD, ConfigKey::OVER_POWER_PROTECTION_THRESHOLD},
+	{SR_CONF_RESISTANCE, ConfigKey::RESISTANCE},
+	{SR_CONF_GATE_TIME, ConfigKey::GATE_TIME},
 	{SR_CONF_HOT_PLUG, ConfigKey::HOT_PLUG},
 	{SR_CONF_TRIGGER_OFFSET, ConfigKey::TRIGGER_OFFSET},
 	{SR_CONF_THRESHOLD_VALUE_1, ConfigKey::THRESHOLD_VALUE_1},
@@ -891,6 +924,13 @@ Glib::VariantBase ConfigKey::parse_string(std::string value, enum sr_datatype dt
 		case SR_T_INT32:
 			try {
 				variant = g_variant_new_int32(stoi(value));
+			} catch (invalid_argument&) {
+				throw Error(SR_ERR_ARG);
+			}
+			break;
+		case SR_T_UINT32:
+			try {
+				variant = g_variant_new_uint32(stoul(value));
 			} catch (invalid_argument&) {
 				throw Error(SR_ERR_ARG);
 			}

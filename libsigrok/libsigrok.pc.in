@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: libsigrok
-Description: Backend library for sigrok signal analysis (CH32h417-only build)
+Description: Backend library for sigrok signal analysis (with WCH CH32H417 support)
 URL: http://www.sigrok.org
 Version: 0.6.0-ch32h417
 Requires: glib-2.0

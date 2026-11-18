@@ -6,6 +6,7 @@
 #   pacman -S --needed --noconfirm \
 #       mingw-w64-x86_64-{gcc,cmake,ninja,pkgconf,gdb} \
 #       mingw-w64-x86_64-{glib2,glibmm,libusb,hidapi,libzip} \
+#       mingw-w64-x86_64-{libserialport,libftdi,nettle} \
 #       mingw-w64-x86_64-{boost,qt5,python,zip}
 #
 # 产物: build/LogicAnalyzer-win64.zip
@@ -140,7 +141,8 @@ for dll in \
     libgcc_s_seh-1.dll libgmodule-2.0-0.dll libusb-1.0.dll libhidapi-0.dll \
     libintl-8.dll libiconv-2.dll libpcre2-8-0.dll libffi-8.dll \
     libzip.dll libbz2-1.dll liblzma-5.dll zlib1.dll libzstd.dll \
-    libpython3.14.dll; do
+    libserialport-0.dll libftdi1.dll libnettle-8.dll libhogweed-6.dll \
+    libgmp-10.dll libpython3.14.dll; do
     cp "$PREFIX/bin/$dll" "$PVDIR/" 2>/dev/null || \
     cp "/mingw64/bin/$dll" "$PVDIR/" 2>/dev/null || true
 done

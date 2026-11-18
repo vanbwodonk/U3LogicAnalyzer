@@ -525,13 +525,15 @@ namespace pv
 			shared_ptr<devices::Device> selected_device = session_.device();
 			list<shared_ptr<devices::Device>> devs;
 			for (const shared_ptr<devices::HardwareDevice> &device : mgr.devices()) {
-				if (util::is_wch_device(QString::fromStdString(
-						device->device()->vendor())))
+				// Keep the demo driver out of the selector, but expose every
+				// real device discovered through the restored sigrok drivers.
+				if (device->hardware_device()->driver()->name() != "demo")
 					devs.push_back(device);
 			}
-			if (selected_device &&
-				util::is_wch_device(QString::fromStdString(
-					selected_device->device()->vendor())) &&
+			shared_ptr<devices::HardwareDevice> selected_hw =
+				dynamic_pointer_cast<devices::HardwareDevice>(selected_device);
+			if (selected_hw &&
+				selected_hw->hardware_device()->driver()->name() != "demo" &&
 				std::find(devs.begin(), devs.end(), selected_device) == devs.end())
 				devs.push_back(selected_device);
 			device_selector_.set_device_list(devs, selected_device);
@@ -1796,8 +1798,10 @@ namespace pv
 		{
 			const QString vendor = device_selector_.selected_vendor();
 			MainWindow *main_window = qobject_cast<MainWindow*>(window());
-			if (!util::is_wch_device(vendor) || !main_window ||
-					!main_window->analyzer_present(vendor)) {
+			// WCH devices have a dedicated presence check; other sigrok
+			// devices are accepted as-is.
+			if (!main_window ||
+					(util::is_wch_device(vendor) && !main_window->analyzer_present(vendor))) {
 				device_selector_.set_not_connected();
 				update_device_config_widgets();
 				update_device_status_icon();
@@ -1849,6 +1853,7 @@ namespace pv
 			}
 
 			// 其他设备的处理
+			set_vendorName(QString::fromStdString(sr_dev->vendor()));
 			session_.select_device(device);
 		}
 

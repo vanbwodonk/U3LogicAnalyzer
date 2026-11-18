@@ -88,7 +88,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	device_refresh_timer_(this)
 {
 	shared_ptr<sigrok::Context> context = sigrok::Context::create();
-	device_manager_ = new pv::DeviceManager(context, "wch-ch32h417", false);
+	// Scan every supported sigrok driver (not just WCH), so that other
+	// logic analyzers/oscilloscopes appear alongside the CH32H417/CH569.
+	device_manager_ = new pv::DeviceManager(context, "", true);
 	if (libusb_init(&usb_context_) != 0)
 		qWarning() << "Unable to initialize USB device monitoring";
 	sessions_.resize(0);
@@ -635,6 +637,7 @@ void MainWindow::poll_hardware_devices()
 
 void MainWindow::refresh_devices_now()
 {
+	force_device_refresh_ = true;
 	std::set<UsbDeviceIdentity> snapshot;
 	if (read_usb_snapshot(snapshot)) {
 		pending_presence_change_ = usb_snapshot_initialized_
@@ -664,12 +667,15 @@ void MainWindow::refresh_hardware_devices()
 			last_focused_session_->device());
 
 	// A refresh while the active analyzer is still present must not clear
-	// captured data by tearing down and reselecting the same device.
-	if (had_device && (pending_presence_change_ == PresenceChange::Unchanged ||
+	// captured data by tearing down and reselecting the same device. An
+	// explicit "Refresh Devices" request always rescans.
+	if (!force_device_refresh_ && had_device &&
+			(pending_presence_change_ == PresenceChange::Unchanged ||
 			pending_presence_change_ == PresenceChange::Added)) {
 		pending_presence_change_ = PresenceChange::Unchanged;
 		return;
 	}
+	force_device_refresh_ = false;
 
 	for (const shared_ptr<Session> &session : sessions_) {
 		if (dynamic_pointer_cast<devices::HardwareDevice>(session->device()))
@@ -679,13 +685,14 @@ void MainWindow::refresh_hardware_devices()
 	}
 
 	// libsigrok drivers keep process-global state, so retain one Context for
-	// the application lifetime and rescan its WCH driver in place.
+	// the application lifetime and rescan all supported drivers in place.
 	DeviceManager *new_manager = device_manager_.load();
-	auto drivers = new_manager->context()->drivers();
-	auto driver = drivers.find("wch-ch32h417");
-	if (driver != drivers.end())
-		new_manager->driver_scan(driver->second,
+	for (auto &entry : new_manager->context()->drivers()) {
+		if (!new_manager->driver_supported(entry.second))
+			continue;
+		new_manager->driver_scan(entry.second,
 			std::map<const sigrok::ConfigKey *, Glib::VariantBase>());
+	}
 
 	shared_ptr<devices::HardwareDevice> selected;
 	for (const shared_ptr<devices::HardwareDevice> &device :
@@ -694,6 +701,15 @@ void MainWindow::refresh_hardware_devices()
 				device->device()->vendor())) != WchDeviceType::None) {
 			selected = device;
 			break;
+		}
+	}
+	if (!selected) {
+		for (const shared_ptr<devices::HardwareDevice> &device :
+				new_manager->devices()) {
+			if (device->hardware_device()->driver()->name() != "demo") {
+				selected = device;
+				break;
+			}
 		}
 	}
 
@@ -817,6 +833,16 @@ void MainWindow::add_default_session()
 				device->device()->vendor())) != WchDeviceType::None) {
 			selected = device;
 			break;
+		}
+	}
+	// Fall back to any real (non-demo) sigrok device.
+	if (!selected) {
+		for (const shared_ptr<devices::HardwareDevice> &device :
+				device_manager_.load()->devices()) {
+			if (device->hardware_device()->driver()->name() != "demo") {
+				selected = device;
+				break;
+			}
 		}
 	}
 

@@ -4,7 +4,7 @@
 #
 # 依赖（Homebrew）:
 #   brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
-#                libzip boost python@3.14
+#                libserialport libftdi nettle libzip boost python@3.14
 #
 # 源码获取: libsigrok / libsigrokdecode 随仓库分发（仓库内置）。
 # 若目录缺失，解析顺序: 环境变量显式指定 → 仓库内目录 → 上一级目录 →

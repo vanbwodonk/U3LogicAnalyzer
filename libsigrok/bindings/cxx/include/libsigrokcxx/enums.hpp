@@ -49,6 +49,7 @@ public:
 	static const DataType * const UINT64_RANGE;
 	static const DataType * const DOUBLE_RANGE;
 	static const DataType * const INT32;
+	static const DataType * const UINT32;
 	static const DataType * const MQ;
 
 protected:
@@ -64,6 +65,7 @@ protected:
 	static const DataType _UINT64_RANGE;
 	static const DataType _DOUBLE_RANGE;
 	static const DataType _INT32;
+	static const DataType _UINT32;
 	static const DataType _MQ;
 };
 
@@ -733,6 +735,16 @@ public:
 	static const ConfigKey * const DEVICE_MODE;
 	/** Self test mode. */
 	static const ConfigKey * const TEST_MODE;
+	static const ConfigKey * const DELAY_GENERATOR;
+	static const ConfigKey * const FREQUENCY_COUNTER;
+	static const ConfigKey * const PROBE_NAMES;
+	static const ConfigKey * const OVER_CURRENT_PROTECTION_DELAY;
+	static const ConfigKey * const INVERTED;
+	static const ConfigKey * const OVER_POWER_PROTECTION_ENABLED;
+	static const ConfigKey * const OVER_POWER_PROTECTION_ACTIVE;
+	static const ConfigKey * const OVER_POWER_PROTECTION_THRESHOLD;
+	static const ConfigKey * const RESISTANCE;
+	static const ConfigKey * const GATE_TIME;
 	static const ConfigKey * const HOT_PLUG;
 	static const ConfigKey * const TRIGGER_OFFSET;
 	static const ConfigKey * const THRESHOLD_VALUE_1;
@@ -861,6 +873,16 @@ protected:
 	static const ConfigKey _DATALOG;
 	static const ConfigKey _DEVICE_MODE;
 	static const ConfigKey _TEST_MODE;
+	static const ConfigKey _DELAY_GENERATOR;
+	static const ConfigKey _FREQUENCY_COUNTER;
+	static const ConfigKey _PROBE_NAMES;
+	static const ConfigKey _OVER_CURRENT_PROTECTION_DELAY;
+	static const ConfigKey _INVERTED;
+	static const ConfigKey _OVER_POWER_PROTECTION_ENABLED;
+	static const ConfigKey _OVER_POWER_PROTECTION_ACTIVE;
+	static const ConfigKey _OVER_POWER_PROTECTION_THRESHOLD;
+	static const ConfigKey _RESISTANCE;
+	static const ConfigKey _GATE_TIME;
 	static const ConfigKey _HOT_PLUG;
 	static const ConfigKey _TRIGGER_OFFSET;
 	static const ConfigKey _THRESHOLD_VALUE_1;

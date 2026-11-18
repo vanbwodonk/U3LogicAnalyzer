@@ -3,7 +3,7 @@
 [中文文档](README_zh.md) | **English**
 
 U3LogicAnalyzer is the PC host software for the CH32H417 / CH569 USB logic
-analyzer, based on PulseView 0.5.0 with a trimmed sigrok stack
+analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 (libsigrok + libsigrokdecode). It supports 130 protocol decoders
 (I2C / SPI / UART ...).
 
@@ -12,6 +12,8 @@ analyzer, based on PulseView 0.5.0 with a trimmed sigrok stack
 ## Features
 
 - CH32H417 (USB 3.0, up to 200 MHz sampling) and CH569 hot-plug detection
+- Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
+  DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
   - Windows: CH375 driver mode (CH375DLL)
   - macOS / Linux: libusb transport inside the driver, no kernel module
     required (protocol based on WCH's official CH37X_LINUX SDK)
@@ -54,7 +56,7 @@ macOS (Homebrew):
 
 ```bash
 brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
-             libzip boost python@3.14
+             libserialport libftdi nettle libzip boost python@3.14
 ```
 
 Linux (Debian/Ubuntu example):
@@ -62,9 +64,10 @@ Linux (Debian/Ubuntu example):
 ```bash
     sudo apt install build-essential cmake ninja-build pkg-config \
       qtbase5-dev qttools5-dev libqt5svg5-dev libglib2.0-dev \
-      libglibmm-2.4-dev libusb-1.0-0-dev libhidapi-dev libzip-dev \
-      libboost-dev libboost-filesystem-dev libboost-serialization-dev \
-      python3-dev
+      libglibmm-2.4-dev libusb-1.0-0-dev libserialport-dev \
+      libftdi1-dev libnettle-dev libieee1284-3-dev libbluetooth-dev \
+      libhidapi-dev libzip-dev libboost-dev libboost-filesystem-dev \
+      libboost-serialization-dev python3-dev
 ```
 
 ### Step 3 - Build
@@ -121,6 +124,9 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
 1. U3 customizations: renamed to U3LogicAnalyzer, Chinese UI, CH32H417/CH569
    support, IAP firmware-upgrade dialog, decoder-channel dialog, dark theme,
    new toolbar icons, zh_CN translations.
+   The bundled libsigrok now contains the complete upstream hardware driver
+   set (FX2LAFW/Saleae, DreamSourceLab, Hantek, serial/SCPI instruments, ...)
+   alongside the CH32H417 driver; the GUI scans all drivers.
 2. macOS / Linux enablement:
    - `build_macos.sh` / `build_windows.sh` / `package_app.sh`
    - libusb transport layer in `ch375_wrapper.c` (non-Windows), async buffered
@@ -137,7 +143,9 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   check `build/install/share/libsigrokdecode/decoders` exists or set
   `SIGROKDECODE_DIR` and restart.
 - Device not found? Run with `-l 5`; on macOS/Linux the driver uses libusb -
-  confirm the device (VID 1a86, PID 5537) is visible to the OS.
+  confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
+  analyzers also need the `sigrok-firmware-fx2lafw` firmware files installed
+  (or `SIGROK_FIRMWARE_DIR` set).
 - App fails to launch after packaging? Make sure the qt@5 `macdeployqt` is
   used (the script pins it) and no stale `build/LogicAnalyzer.app` remains.
 
