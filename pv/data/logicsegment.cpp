@@ -392,8 +392,13 @@ inline void LogicSegment::pack_sample(uint8_t *ptr, uint64_t value)
 
 void LogicSegment::append_payload(shared_ptr<sigrok::Logic> logic)
 {
-	assert(unit_size_ == logic->unit_size());
-	assert((logic->data_length() % unit_size_) == 0);
+	if (!logic || unit_size_ == 0 || logic->unit_size() != unit_size_ ||
+			(logic->data_length() % unit_size_) != 0) {
+		qWarning() << "LogicSegment: dropping logic payload with mismatched "
+			"unit size or length.";
+		return;
+	}
+
 	if (!bad_memory_){
 		append_payload(logic->data_pointer(), logic->data_length());
 	}
@@ -401,8 +406,12 @@ void LogicSegment::append_payload(shared_ptr<sigrok::Logic> logic)
 
 void LogicSegment::append_payload(void *data, uint64_t data_size)
 {
-	assert(unit_size_ > 0);
-	assert((data_size % unit_size_) == 0);
+	if (unit_size_ == 0 || (data_size % unit_size_) != 0) {
+		qWarning() << "LogicSegment: dropping logic payload with invalid "
+			"unit size or length.";
+		return;
+	}
+
 	lock_guard<recursive_mutex> lock(mutex_);
 
 	uint64_t prev_sample_count = sample_count_;
@@ -439,8 +448,11 @@ void LogicSegment::append_payload(void *data, uint64_t data_size)
 
 void LogicSegment::append_payload_decode(void *data, uint64_t data_size)
 {
-	assert(unit_size_ > 0);
-	assert((data_size % unit_size_) == 0);
+	if (unit_size_ == 0 || (data_size % unit_size_) != 0) {
+		qWarning() << "LogicSegment: dropping decode payload with invalid "
+			"unit size or length.";
+		return;
+	}
 
 	const uint64_t prev_sample_count = sample_count_;
 	const uint64_t sample_count = data_size / unit_size_;
