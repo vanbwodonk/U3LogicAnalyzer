@@ -47,7 +47,7 @@
 #include <libusb.h>
 #include <hidapi.h>
 
-#include "../../../libsigrok/src/hardware/wch-ch32h417/ch375_wrapper.h"
+#include "../../libsigrok/src/hardware/wch-ch32h417/ch375_wrapper.h"
 
 Q_DECLARE_METATYPE(unsigned long)
 

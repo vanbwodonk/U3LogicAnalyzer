@@ -71,4 +71,4 @@ test/cmake_install.cmake
 *.qm
 
 # Local Arch Linux packaging
-/AUR/
+/AUR/.SRCINFO

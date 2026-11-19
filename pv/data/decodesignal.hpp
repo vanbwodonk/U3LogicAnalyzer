@@ -32,8 +32,7 @@
 #include <QSettings>
 #include <QElapsedTimer>
 
-// #include <libsigrokdecode/libsigrokdecode.h>
-#include "../../../libsigrokdecode/libsigrokdecode.h"
+#include <libsigrokdecode/libsigrokdecode.h>
 #include <pv/data/decode/decoder.hpp>
 #include <pv/data/decode/row.hpp>
 #include <pv/data/decode/rowdata.hpp>
