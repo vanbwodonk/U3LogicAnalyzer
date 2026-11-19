@@ -353,50 +353,76 @@ void MainWindow::setup_application_menu(MainBar *main_bar)
 	QMenuBar *bar = menuBar();
 	bar->setNativeMenuBar(true);
 
-	QMenu *file_menu = bar->addMenu(tr("File"));
-	file_menu->addAction(main_bar->action_open());
-	file_menu->addAction(main_bar->action_save());
-	file_menu->addAction(main_bar->action_save_as());
+	menu_file_ = bar->addMenu(tr("File"));
+	menu_file_->addAction(main_bar->action_open());
+	menu_file_->addAction(main_bar->action_save());
+	menu_file_->addAction(main_bar->action_save_as());
 
-	QAction *preferences = new QAction(tr("Preferences..."), this);
-	preferences->setMenuRole(QAction::PreferencesRole);
-	connect(preferences, &QAction::triggered, this, &MainWindow::on_settings_clicked);
-	file_menu->addSeparator();
-	file_menu->addAction(preferences);
+	action_preferences_ = new QAction(tr("Preferences..."), this);
+	action_preferences_->setMenuRole(QAction::PreferencesRole);
+	connect(action_preferences_, &QAction::triggered, this, &MainWindow::on_settings_clicked);
+	menu_file_->addSeparator();
+	menu_file_->addAction(action_preferences_);
 
-	QAction *quit = new QAction(tr("Quit"), this);
-	quit->setMenuRole(QAction::QuitRole);
-	connect(quit, &QAction::triggered, qApp, &QApplication::quit);
-	file_menu->addAction(quit);
+	action_quit_ = new QAction(tr("Quit"), this);
+	action_quit_->setMenuRole(QAction::QuitRole);
+	connect(action_quit_, &QAction::triggered, qApp, &QApplication::quit);
+	menu_file_->addAction(action_quit_);
 
-	QMenu *device_menu = bar->addMenu(tr("Device"));
-	QAction *refresh = device_menu->addAction(tr("Refresh Devices"));
-	refresh->setShortcut(QKeySequence::Refresh);
-	connect(refresh, &QAction::triggered, this, &MainWindow::refresh_devices_now);
-	device_menu->addSeparator();
-	device_menu->addAction(main_bar->action_device_options());
-	device_menu->addAction(main_bar->action_channel_configuration());
+	menu_device_ = bar->addMenu(tr("Device"));
+	action_refresh_devices_ = menu_device_->addAction(tr("Refresh Devices"));
+	action_refresh_devices_->setShortcut(QKeySequence::Refresh);
+	connect(action_refresh_devices_, &QAction::triggered, this, &MainWindow::refresh_devices_now);
+	menu_device_->addSeparator();
+	menu_device_->addAction(main_bar->action_device_options());
+	menu_device_->addAction(main_bar->action_channel_configuration());
 
-	QMenu *acquisition_menu = bar->addMenu(tr("Acquisition"));
-	acquisition_menu->addAction(main_bar->action_single());
-	acquisition_menu->addAction(main_bar->action_repeat());
-	acquisition_menu->addSeparator();
-	QAction *start_stop = acquisition_menu->addAction(tr("Start / Stop"));
-	start_stop->setShortcut(QKeySequence(Qt::Key_S));
-	connect(start_stop, &QAction::triggered, this, &MainWindow::on_run_stop_clicked);
+	menu_acquisition_ = bar->addMenu(tr("Acquisition"));
+	menu_acquisition_->addAction(main_bar->action_single());
+	menu_acquisition_->addAction(main_bar->action_repeat());
+	menu_acquisition_->addSeparator();
+	action_start_stop_ = menu_acquisition_->addAction(tr("Start / Stop"));
+	action_start_stop_->setShortcut(QKeySequence(Qt::Key_S));
+	connect(action_start_stop_, &QAction::triggered, this, &MainWindow::on_run_stop_clicked);
 
-	QMenu *view_menu = bar->addMenu(tr("View"));
-	QAction *decoder = view_menu->addAction(tr("Add Protocol Decoder"));
-	decoder->setShortcut(QKeySequence(Qt::Key_D));
-	connect(decoder, &QAction::triggered, main_bar, &MainBar::on_add_decoder_clicked);
-	view_menu->addAction(main_bar->action_new_view());
+	menu_view_ = bar->addMenu(tr("View"));
+	action_add_decoder_ = menu_view_->addAction(tr("Add Protocol Decoder"));
+	action_add_decoder_->setShortcut(QKeySequence(Qt::Key_D));
+	connect(action_add_decoder_, &QAction::triggered, main_bar, &MainBar::on_add_decoder_clicked);
+	menu_view_->addAction(main_bar->action_new_view());
 
-	QMenu *help_menu = bar->addMenu(tr("Help"));
-	help_menu->addAction(main_bar->action_user_guide());
-	help_menu->addAction(main_bar->action_software_update());
-	help_menu->addAction(main_bar->action_update());
-	help_menu->addSeparator();
-	help_menu->addAction(main_bar->action_version_info());
+	menu_help_ = bar->addMenu(tr("Help"));
+	menu_help_->addAction(main_bar->action_user_guide());
+	menu_help_->addAction(main_bar->action_software_update());
+	menu_help_->addAction(main_bar->action_update());
+	menu_help_->addSeparator();
+	menu_help_->addAction(main_bar->action_version_info());
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+	if (event->type() == QEvent::LanguageChange) {
+		retranslate_application_menu();
+		// Qt only sends LanguageChange to top-level widgets; forward it so
+		// toolbars (and their menus) can re-apply their translations too.
+		for (QWidget *widget : findChildren<QWidget *>())
+			QApplication::sendEvent(widget, event);
+	}
+	QMainWindow::changeEvent(event);
+}
+
+void MainWindow::retranslate_application_menu()
+{
+	if (menu_file_) menu_file_->setTitle(tr("File"));
+	if (menu_device_) menu_device_->setTitle(tr("Device"));
+	if (menu_acquisition_) menu_acquisition_->setTitle(tr("Acquisition"));
+	if (menu_view_) menu_view_->setTitle(tr("View"));
+	if (menu_help_) menu_help_->setTitle(tr("Help"));
+	if (action_preferences_) action_preferences_->setText(tr("Preferences..."));
+	if (action_quit_) action_quit_->setText(tr("Quit"));
+	if (action_refresh_devices_) action_refresh_devices_->setText(tr("Refresh Devices"));
+	if (action_start_stop_) action_start_stop_->setText(tr("Start / Stop"));
+	if (action_add_decoder_) action_add_decoder_->setText(tr("Add Protocol Decoder"));
 }
 
 void MainWindow::remove_view(shared_ptr<views::ViewBase> view)

@@ -125,9 +125,11 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - In C code use `g_try_malloc()` / `g_free()` and glib types; avoid
   `g_malloc()` (it aborts on OOM).
 - User-visible strings go through `tr()`. Translations live in `l10n/*.ts`
-  (`zh_cn.ts` is the primary Chinese translation). CMake runs
-  `qt5_create_translation` during the build, which may rewrite those files —
-  review `git diff l10n/` after touching strings.
+  (`zh_cn.ts` is the Chinese translation and `en.ts` translates the
+  Chinese-origin strings for English/fallback UI). The build only runs
+  `lrelease` (`qt5_add_translation`); run `lupdate` manually after changing
+  strings and fill new entries. Do not re-enable `qt5_create_translation`,
+  which rewrites the `.ts` files during builds.
 - New `Q_OBJECT` headers must be added to the `pulseview_HEADERS` list (and to
   the parallel test lists) so AUTOMOC processes them; add new sources to
   `pulseview_SOURCES`.

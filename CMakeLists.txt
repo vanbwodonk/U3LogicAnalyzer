@@ -490,7 +490,6 @@ if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 endif ()
 
 qt5_add_translation(QM_FILES ${TS_FILES})
-qt5_create_translation(QM_FILES ${pulseview_SOURCES} ${TS_FILES})
 
 qt5_add_resources(pulseview_RESOURCES_RCC ${CMAKE_BINARY_DIR}/translations.qrc)
 

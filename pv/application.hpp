@@ -75,7 +75,7 @@ private:
 	vector< pair<QString, QString> > output_format_list_;
 	vector< pair<QString, QString> > pd_list_;
 	QProcess * UpdateFwVersion_;
-	QTranslator app_translator_, qt_translator_, qtbase_translator_;
+	QTranslator app_translator_, en_translator_, qt_translator_, qtbase_translator_;
 	uint64_t hd_version_ = 0;
 };
 

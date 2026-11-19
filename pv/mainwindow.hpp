@@ -49,6 +49,9 @@ struct srd_decoder;
 struct libusb_context;
 
 class QVBoxLayout;
+class QMenu;
+class QAction;
+class QEvent;
 
 namespace pv {
 
@@ -115,6 +118,10 @@ private:
 	void setup_ui();
 	void setup_application_menu(toolbars::MainBar *main_bar);
 	void update_acq_button(Session *session);
+	void retranslate_application_menu();
+
+protected:
+	void changeEvent(QEvent *event) override;
 
 	void save_ui_settings();
 	void restore_ui_settings();
@@ -223,6 +230,16 @@ private:
 	PresenceChange pending_presence_change_ = PresenceChange::Unchanged;
 	int device_scan_retries_ = 0;
 	bool application_menu_initialized_ = false;
+	QMenu *menu_file_ = nullptr;
+	QMenu *menu_device_ = nullptr;
+	QMenu *menu_acquisition_ = nullptr;
+	QMenu *menu_view_ = nullptr;
+	QMenu *menu_help_ = nullptr;
+	QAction *action_preferences_ = nullptr;
+	QAction *action_quit_ = nullptr;
+	QAction *action_refresh_devices_ = nullptr;
+	QAction *action_start_stop_ = nullptr;
+	QAction *action_add_decoder_ = nullptr;
 };
 
 } // namespace pv

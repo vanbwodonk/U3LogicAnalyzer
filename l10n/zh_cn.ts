@@ -302,6 +302,9 @@ Do you want to save the session?</source>
 </context>
 <context>
     <name>pv::MainWindow</name>
+    <message><source>Trace View</source><translation>采集视图</translation></message>
+    <message><source>Binary Decoder Output View</source><translation>二进制解码器</translation></message>
+    <message><source>Tabular Decoder Output View</source><translation>表格解码器</translation></message>
     <message>
         <location filename="../pv/mainwindow.cpp" line="76"/>
         <source>LogicAnalyzer</source>
@@ -2380,6 +2383,10 @@ PulseView可能需要重新启动才能正确显示。</translation>
     <message><source>Repeat acquisition</source><translation>重复采集</translation></message>
     <message><source>Channel Configuration</source><translation>通道配置</translation></message>
     <message><source>Version Info</source><translation>版本信息</translation></message>
+    <message><source>Software version</source><translation>软件版本</translation></message>
+    <message><source>Firmware version</source><translation>固件版本</translation></message>
+    <message><source>FPGA version</source><translation>FPGA 版本</translation></message>
+    <message><source>OK</source><translation>确定</translation></message>
     <message><source>Firmware Update</source><translation>固件更新</translation></message>
     <message><source>Checking for Updates...</source><translation>正在检查更新...</translation></message>
     <message><source>Software Update</source><translation>软件更新</translation></message>
@@ -2543,6 +2550,11 @@ Latest: %2</source><translation>发现新版本。
 </context>
 <context>
     <name>pv::views::tabular_decoder::View</name>
+    <message><source>CSV, commas escaped</source><translation>CSV，逗号已转义</translation></message>
+    <message><source>CSV, fields quoted</source><translation>CSV，字段已加引号</translation></message>
+    <message><source>Show all</source><translation>全部显示</translation></message>
+    <message><source>Show all and focus on newest</source><translation>全部显示并锁定最新内容</translation></message>
+    <message><source>Show visible in main view</source><translation>只显示当前主窗口内数据的解码</translation></message>
     <message>
         <location filename="../pv/views/tabular_decoder/view copy.cpp" line="177"/>
         <location filename="../pv/views/tabular_decoder/view.cpp" line="183"/>

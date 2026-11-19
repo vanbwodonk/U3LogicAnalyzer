@@ -74,11 +74,19 @@ const QStringList Application::get_languages() const
 	const QStringList files = QDir(":/l10n/").entryList(QStringList("*.qm"), QDir::Files);
 
 	QStringList result;
-	result << "en";  // Add default language to the set
 
 	// Remove file extensions
-	for (const QString& file : files)
-		result << file.split(".").front();
+	for (const QString& file : files) {
+		const QString language = file.split(".").front();
+		if (!result.contains(language, Qt::CaseInsensitive))
+			result << language;
+	}
+
+	// English is also available without a .qm file (it is the source
+	// language), but en.qm is shipped to translate the remaining
+	// Chinese-origin strings.
+	if (!result.contains("en", Qt::CaseInsensitive))
+		result << "en";
 
 	result.sort(Qt::CaseInsensitive);
 
@@ -101,10 +109,23 @@ void Application::set_hardware_version(uint64_t hardware_version)
 void Application::switch_language(const QString& language)
 {
 	removeTranslator(&app_translator_);
+	removeTranslator(&en_translator_);
 	removeTranslator(&qt_translator_);
 	removeTranslator(&qtbase_translator_);
 
-	if ((language != "C") && (language != "en")) {
+	if ((language == "C") || (language == "en")) {
+		// English is the source language for most strings. en.qm also
+		// translates the strings that still originate in Chinese so that
+		// they do not leak into the English UI.
+		if (en_translator_.load(":/l10n/en.qm"))
+			installTranslator(&en_translator_);
+	} else {
+		// For non-Chinese languages, install en.qm first as a fallback so
+		// Chinese-origin strings fall back to English instead of Chinese.
+		if (language != "zh_cn" &&
+				en_translator_.load(":/l10n/en.qm"))
+			installTranslator(&en_translator_);
+
 		// Application translations
 		QString resource = ":/l10n/" + language +".qm";
 		if (app_translator_.load(resource))

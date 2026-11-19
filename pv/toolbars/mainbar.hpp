@@ -218,6 +218,11 @@ protected:
 	void add_toolbar_widgets();
 
 	bool eventFilter(QObject *watched, QEvent *event);
+	void changeEvent(QEvent *event) override;
+
+private:
+	void retranslate_ui();
+	QMenu *menu_new_view_ = nullptr;
 
 Q_SIGNALS:
 	void new_view(Session *session, int type);

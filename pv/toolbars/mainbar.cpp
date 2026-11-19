@@ -69,6 +69,7 @@
 #include <pv/softwareupdate.hpp>
 #include <pv/util.hpp>
 #include <pv/views/trace/view.hpp>
+#include <pv/views/viewbase.hpp>
 #include <pv/widgets/exportmenu.hpp>
 #include <pv/widgets/importmenu.hpp>
 #include "../dialogs/iapdialog.hpp"
@@ -280,13 +281,13 @@ namespace pv
 			// 	this, SLOT(on_actionConnect_triggered()));
 
 			// New view button
-			QMenu *menu_new_view = new QMenu();
-			connect(menu_new_view, SIGNAL(triggered(QAction *)),
+			menu_new_view_ = new QMenu();
+			connect(menu_new_view_, SIGNAL(triggered(QAction *)),
 					this, SLOT(on_actionNewView_triggered(QAction *)));
 
 			for (int i = 1; i < views::ViewTypeCount; i++)
 			{
-				QAction *const action = menu_new_view->addAction(tr(views::ViewTypeNames[i]));
+				QAction *const action = menu_new_view_->addAction(tr(views::ViewTypeNames[i]));
 				if (strcmp(views::ViewTypeNames[i], "Binary Decoder Output View") == 0)
 					action->setText(tr("Binary Decoder Output View"));
 				if (strcmp(views::ViewTypeNames[i], "Tabular Decoder Output View") == 0)
@@ -294,7 +295,7 @@ namespace pv
 				action->setData(QVariant::fromValue(i));
 			}
 
-			new_view_button_->setMenu(menu_new_view);
+			new_view_button_->setMenu(menu_new_view_);
 			new_view_button_->setDefaultAction(action_new_view_);
 			new_view_button_->setPopupMode(QToolButton::MenuButtonPopup);
 			new_view_button_->setToolButtonStyle(Qt::ToolButtonIconOnly);
@@ -2132,6 +2133,55 @@ namespace pv
 			delete dialog;
 		}
 
+		void MainBar::changeEvent(QEvent *event)
+		{
+			if (event->type() == QEvent::LanguageChange)
+				retranslate_ui();
+			QToolBar::changeEvent(event);
+		}
+
+		void MainBar::retranslate_ui()
+		{
+			action_new_view_->setText(tr("Decoding Result"));
+			action_open_->setText(tr("&Open..."));
+			action_restore_setup_->setText(tr("Restore Session Setu&p..."));
+			action_save_->setText(tr("Save"));
+			action_save_as_->setText(tr("Save &As..."));
+			action_save_selection_as_->setText(tr("Save Selected &Range As..."));
+			action_save_setup_->setText(tr("Save Session Setu&p..."));
+			action_connect_->setText(tr("&Connect to Device..."));
+			action_single_->setText(tr("Single"));
+			action_repeat_->setText(tr("Repeat"));
+			action_version_info_->setText(tr("Version Info"));
+			action_software_update_->setText(tr("Software Update"));
+			action_update_->setText(tr("Firmware Update"));
+			action_user_guide_->setText(tr("User Guide"));
+			action_device_options_->setText(tr("Device Options"));
+			action_channel_configuration_->setText(tr("Channel Configuration"));
+
+			if (menu_new_view_) {
+				for (QAction *action : menu_new_view_->actions()) {
+					const int type = action->data().toInt();
+					if (type > 0 && type < views::ViewTypeCount)
+						action->setText(tr(views::ViewTypeNames[type]));
+				}
+			}
+
+			new_view_button_->setToolTip(tr("Decoding Result"));
+			help_button_->setToolTip(tr("Help"));
+			model_change_button_->setToolTip(tr("Acquisition Mode"));
+			open_button_->setToolTip(tr("Open"));
+			save_button_->setToolTip(tr("Save"));
+#ifdef ENABLE_DECODE
+			add_decoder_button_->setToolTip(tr("Add protocol decoder"));
+#endif
+			channels_button_.setToolTip(tr("Configure Channels"));
+			channels_button_.setText(tr("Option"));
+			sample_count_.set_prefix_text(tr("Duration"));
+			sample_rate_.set_prefix_text(tr("Sample rate"));
+			update_device_status_icon();
+		}
+
 		void MainBar::on_action_version_info_triggered()
 		{
 			QString softwareVersion = QString::fromLatin1(U3LOGIC_VERSION_STRING);
@@ -2143,7 +2193,7 @@ namespace pv
 			// 无设备时只显示软件版本
 			if (vendorName != "USB3.0(CH32H417)" && vendorName != "USB3.0(CH569)")
 			{
-				text = QString("<b>软件版本：</b> %1").arg(softwareVersion);
+				text = QString("<b>%1:</b> %2").arg(tr("Software version"), softwareVersion);
 			}
 			else
 			{
@@ -2163,9 +2213,11 @@ namespace pv
 					firmwareVersion = QString::number(hw) + "." + QString::number(fw);
 
 					text = QString(
-							   "<b>软件版本：</b> %1<br/>"
-							   "<b>固件版本：</b> %2<br/>")
+							   "<b>%1:</b> %2<br/>"
+							   "<b>%3:</b> %4<br/>")
+							   .arg(tr("Software version"))
 							   .arg(softwareVersion)
+							   .arg(tr("Firmware version"))
 							   .arg(firmwareVersion);
 				}
 				else
@@ -2178,16 +2230,19 @@ namespace pv
 					fpgaVersion += ".";
 					fpgaVersion += QString::number((hardware_version_ >> 8) & 0xff);
 					text = QString(
-							   "<b>软件版本：</b> %1<br/>"
-							   "<b>固件版本：</b> %2<br/>"
-							   "<b>FPGA版本：</b> %3")
+							   "<b>%1:</b> %2<br/>"
+							   "<b>%3:</b> %4<br/>"
+							   "<b>%5:</b> %6")
+							   .arg(tr("Software version"))
 							   .arg(softwareVersion)
+							   .arg(tr("Firmware version"))
 							   .arg(firmwareVersion)
+							   .arg(tr("FPGA version"))
 							   .arg(fpgaVersion);
 				}
 			}
 			QDialog dialog(this);
-				dialog.setWindowTitle(tr("版本信息"));
+				dialog.setWindowTitle(tr("Version Info"));
 
 				// 设置更大的字体
 				QFont font = dialog.font();
@@ -2222,7 +2277,7 @@ namespace pv
 				// 创建按钮
 				QHBoxLayout *buttonLayout = new QHBoxLayout();
 				buttonLayout->addStretch();
-				QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+				QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 				buttonLayout->addWidget(okBtn);
 				layout->addLayout(buttonLayout);
 
