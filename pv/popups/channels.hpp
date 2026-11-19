@@ -107,6 +107,7 @@ Q_SIGNALS:
 	void adc_precision_changed(int precision);
 	void threshold_value_raw_changed(uint16_t value);
 	void channel_selection_changed();
+	void sample_count_limits_changed();
 
 public Q_SLOTS:
 	void channelSelect(uint16_t index);

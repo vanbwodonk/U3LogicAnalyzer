@@ -835,8 +835,23 @@ namespace pv
 			{
 				sampleRate = 25000;
 			}
-			double max_time = 18000000000.00 / ((double)sampleRate * (double)(channel_number_ / 8.00));
-			double min_time = 0.5;
+			double max_time;
+			if (max_sample_count > 0 && max_sample_count < MaxSampleCount)
+			{
+				// The driver knows the hardware depth (DSLogic buffer/RLE and
+				// stream limits). Use it instead of the generic byte cap.
+				max_time = (double)max_sample_count / (double)sampleRate;
+			}
+			else
+			{
+				max_time = 18000000000.00 / ((double)sampleRate * (double)(channel_number_ / 8.00));
+			}
+			double min_time = 0.0001; // 100 us
+			if (max_sample_count > 0)
+				min_time = std::max(min_time,
+					(double)min_sample_count / (double)sampleRate);
+			if (max_time <= min_time)
+				max_time = min_time * 10.0;
 			sample_count_.show_125_list(min_time * 10000, max_time * 10000); // commit sample count
 
 			if (sr_dev->config_check(ConfigKey::LIMIT_SAMPLES, Capability::GET))
@@ -985,9 +1000,19 @@ namespace pv
 
 		void MainBar::on_update_channel_count(uint16_t channelCount)
 		{
-			// CH32H417专用：处理通道数变化
-			// 只接受8或16通道
-			if (channelCount != 8 && channelCount != 16)
+			const shared_ptr<devices::Device> device = device_selector_.selected_device();
+			bool is_dslogic = false;
+			if (device && device->device())
+			{
+				const QString vendor = QString::fromStdString(device->device()->vendor());
+				const QString model = QString::fromStdString(device->device()->model());
+				is_dslogic = (vendor == "DreamSourceLab" &&
+					model.contains("DSLogic", Qt::CaseInsensitive));
+			}
+
+			// WCH only supports 8/16 channels. DSLogic buffer/stream modes use
+			// 3/4/6/8/12/16 channels.
+			if (!is_dslogic && channelCount != 8 && channelCount != 16)
 			{
 				return;
 			}
@@ -997,7 +1022,8 @@ namespace pv
 				return;
 			}
 
-			commit_channel_number(channelCount);
+			if (!is_dslogic)
+				commit_channel_number(channelCount);
 			channel_number_ = channelCount;
 
 			update_sample_count_selector();
@@ -1422,6 +1448,8 @@ namespace pv
 			connect(channels_, SIGNAL(adc_precision_changed(int)), this, SLOT(on_adc_precision_changed(int)));
 			connect(channels_, SIGNAL(threshold_value_raw_changed(uint16_t)), this, SLOT(on_threshold_value_raw_changed(uint16_t)));
 			connect(channels_, SIGNAL(channel_selection_changed()), this, SLOT(on_channel_selection_changed()));
+			connect(channels_, &pv::popups::Channels::sample_count_limits_changed,
+				this, [this]() { update_sample_count_selector(); });
 			// end
 			//  channels_button_.set_popup(channels_);
 			//  Update supported options.

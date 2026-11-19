@@ -22,6 +22,9 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
 - 长时间采集建议使用 Stream 模式：Buffer 模式要等采集结束后才上传数据，
   Stream 模式边采集边传输（2 秒 @10MHz/16 通道：Stream 约 2.0 秒，
   Buffer 约 3.4 秒）
+- DSLogic Buffer 深度已反映在采样时长列表中：未启用 RLE 时深度为
+  `256 Mbit / 通道数`，因此 400MHz、4 通道最大为 167.77ms；启用 RLE
+  可以增加可用深度。
   - Windows：原厂 CH375 驱动模式（CH375DLL）
   - macOS / Linux：驱动内置 **libusb 传输层**，无需任何内核驱动（协议参考
     WCH 官方 CH37X_LINUX SDK）

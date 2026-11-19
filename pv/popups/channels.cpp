@@ -463,6 +463,7 @@ void Channels::init_dslogic_ui()
 				Glib::Variant<bool>::create(enabled));
 		} catch (sigrok::Error&) {
 		}
+		sample_count_limits_changed();
 	});
 	connect(dslogic_threshold_, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
 		this, [this](double value) {
@@ -577,7 +578,9 @@ void Channels::apply_dslogic_channel_mode(int index)
 
 	session_.update_signals();
 	channel_selection_changed();
+	channel_count_change(mode.channels);
 	max_sample_rate_change(mode.max_samplerate);
+	sample_count_limits_changed();
 }
 
 void Channels::init_channel_state()

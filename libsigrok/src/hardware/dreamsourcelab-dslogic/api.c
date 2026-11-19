@@ -68,7 +68,7 @@ static const uint32_t drvopts[] = {
 
 static const uint32_t devopts[] = {
 	SR_CONF_CONTINUOUS | SR_CONF_SET | SR_CONF_GET,
-	SR_CONF_LIMIT_SAMPLES | SR_CONF_GET | SR_CONF_SET,
+	SR_CONF_LIMIT_SAMPLES | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_VOLTAGE_THRESHOLD | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_CONN | SR_CONF_GET,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
@@ -558,6 +558,19 @@ static int config_set(uint32_t key, GVariant *data,
 	return SR_OK;
 }
 
+static unsigned int enabled_channel_count(const struct sr_dev_inst *sdi)
+{
+	unsigned int count = 0;
+
+	for (GSList *l = sdi->channels; l; l = l->next) {
+		const struct sr_channel *const channel = l->data;
+		if (channel->enabled)
+			count++;
+	}
+
+	return count;
+}
+
 static int config_list(uint32_t key, GVariant **data,
 	const struct sr_dev_inst *sdi, const struct sr_channel_group *cg)
 {
@@ -566,6 +579,26 @@ static int config_list(uint32_t key, GVariant **data,
 	devc = (sdi) ? sdi->priv : NULL;
 
 	switch (key) {
+	case SR_CONF_LIMIT_SAMPLES:
+		if (!devc || !devc->profile)
+			return SR_ERR_ARG;
+		{
+			unsigned int channels = enabled_channel_count(sdi);
+			uint64_t max_samples;
+
+			if (!channels)
+				channels = 1;
+
+			if (devc->continuous_mode)
+				max_samples = 16ULL * 1024 * 1024 * 1024;
+			else if (devc->rle_mode)
+				max_samples = (16ULL * 1024 * 1024 * 1024) / channels;
+			else
+				max_samples = devc->profile->mem_depth / channels;
+
+			*data = std_gvar_tuple_u64(16, max_samples);
+		}
+		break;
 	case SR_CONF_SCAN_OPTIONS:
 	case SR_CONF_DEVICE_OPTIONS:
 		return STD_CONFIG_LIST(key, data, sdi, cg, scanopts, drvopts, devopts);
