@@ -169,6 +169,12 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - FX2LAFW analyzers need firmware from `sigrok-firmware-fx2lafw`. The app was
   verified end-to-end with a Saleae Logic (`0925:3881`); after upload the
   device re-enumerates as a sigrok FX2LAFW device.
+- The DreamSourceLab DSLogic driver includes the API v2 support from libsigrok
+  PR #170 (DSLogic Plus `2a0e:0020`, U3Pro16 `2a0e:002a`). Scan must tolerate
+  unreadable USB string descriptors and `dslogic_dev_open()` falls back to
+  API v2 for those models if strings are unavailable. DSLogic firmware files
+  are not vendored: `build_linux.sh` copies the FPGA/ FX2 files from
+  `/usr/share/DSView/res` when DSView is installed (see README FAQ).
 - The acquisition path is sensitive to 8- vs 16-channel packing:
   `Segment::unit_size_temp` is `8 / channel_num`, and channel-bit offsets /
   `channel_switch_2` depend on it. A divide-by-zero/crash in the 16-channel

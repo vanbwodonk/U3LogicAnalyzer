@@ -151,6 +151,21 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
   analyzers also need the `sigrok-firmware-fx2lafw` firmware files installed
   (or `SIGROK_FIRMWARE_DIR` set).
+- DreamSourceLab DSLogic not detected, or firmware/FPGA upload fails? The
+  driver needs DreamSourceLab firmware files. If DSView is installed,
+  `./build_linux.sh` copies the FPGA bitstream automatically from
+  `/usr/share/DSView/res`. To install manually (also for the AUR package):
+
+  ```bash
+  mkdir -p ~/.local/share/sigrok-firmware
+  cp /usr/share/DSView/res/DSLogicPlus.bin \
+     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fpga.fw
+  # DSLogicPlus.fw is missing from some distro packages; DSLogic.fw is a
+  # fallback for bootloader recovery:
+  cp /usr/share/DSView/res/DSLogic.fw \
+     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fx2.fw
+  ```
+
 - App fails to launch after packaging? Make sure the qt@5 `macdeployqt` is
   used (the script pins it) and no stale `build/LogicAnalyzer.app` remains.
 

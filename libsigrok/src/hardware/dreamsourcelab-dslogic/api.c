@@ -26,23 +26,34 @@ static const struct dslogic_profile supported_device[] = {
 	/* DreamSourceLab DSLogic */
 	{ 0x2a0e, 0x0001, "DreamSourceLab", "DSLogic", NULL,
 		"dreamsourcelab-dslogic-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024},
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSCope */
 	{ 0x2a0e, 0x0002, "DreamSourceLab", "DSCope", NULL,
 		"dreamsourcelab-dscope-fx2.fw",
-		0, "DreamSourceLab", "DSCope", 256 * 1024 * 1024},
+		0, "DreamSourceLab", "DSCope", 256 * 1024 * 1024, 100,
+		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Pro */
 	{ 0x2a0e, 0x0003, "DreamSourceLab", "DSLogic Pro", NULL,
 		"dreamsourcelab-dslogic-pro-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024},
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Plus */
 	{ 0x2a0e, 0x0020, "DreamSourceLab", "DSLogic Plus", NULL,
 		"dreamsourcelab-dslogic-plus-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024},
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Basic */
 	{ 0x2a0e, 0x0021, "DreamSourceLab", "DSLogic Basic", NULL,
 		"dreamsourcelab-dslogic-basic-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024},
+		0, "DreamSourceLab", "DSLogic", 256 * 1024, 100,
+		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
+	/* DreamSourceLab DSLogic U3Pro16 */
+	{ 0x2a0e, 0x002a, "DreamSourceLab", "DSLogic U3Pro16", NULL,
+		"dreamsourcelab-dslogic-basic-fx2.fw",
+		DSLOGIC_CAPS_ADF4360 | DSLOGIC_CAPS_USB30, "DreamSourceLab", "DSLogic",
+		2ULL * 1024ULL * 1024ULL * 1024ULL, 40,
+		1024, SR_MHZ(500), SR_MHZ(500), SR_GHZ(1), 5},
 
 	ALL_ZERO
 };
@@ -104,6 +115,27 @@ static const uint64_t samplerates[] = {
 	SR_MHZ(400),
 };
 
+static const uint64_t samplerates_U3Pro16[] = {
+	SR_KHZ(10),
+	SR_KHZ(20),
+	SR_KHZ(50),
+	SR_KHZ(100),
+	SR_KHZ(200),
+	SR_KHZ(500),
+	SR_MHZ(1),
+	SR_MHZ(2),
+	SR_MHZ(5),
+	SR_MHZ(10),
+	SR_MHZ(20),
+	SR_MHZ(25),
+	SR_MHZ(50),
+	SR_MHZ(100),
+	SR_MHZ(125),
+	SR_MHZ(250),
+	SR_MHZ(500),
+	SR_MHZ(1000),
+};
+
 static gboolean is_plausible(const struct libusb_device_descriptor *des)
 {
 	int i;
@@ -118,6 +150,18 @@ static gboolean is_plausible(const struct libusb_device_descriptor *des)
 	return FALSE;
 }
 
+static enum dslogic_api_version dslogic_api_version_from_strings(
+		const char *manufacturer, const char *product)
+{
+	if (!strcmp(manufacturer, "DreamSourceLab")) {
+		if (!strcmp(product, "USB-based Instrument"))
+			return DS_API_V1;
+		if (!strcmp(product, "USB-based DSL Instrument v2"))
+			return DS_API_V2;
+	}
+	return DS_API_V_UNKNOWN;
+}
+
 static GSList *scan(struct sr_dev_driver *di, GSList *options)
 {
 	struct drv_context *drvc;
@@ -128,8 +172,8 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	struct sr_channel_group *cg;
 	struct sr_config *src;
 	const struct dslogic_profile *prof;
+	enum dslogic_api_version api_version;
 	GSList *l, *devices, *conn_devices;
-	gboolean has_firmware;
 	struct libusb_device_descriptor des;
 	libusb_device **devlist;
 	struct libusb_device_handle *hdl;
@@ -184,35 +228,30 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 			continue;
 		}
 
-		if (des.iManufacturer == 0) {
-			manufacturer[0] = '\0';
-		} else if ((ret = libusb_get_string_descriptor_ascii(hdl,
-				des.iManufacturer, (unsigned char *) manufacturer,
-				sizeof(manufacturer))) < 0) {
-			sr_warn("Failed to get manufacturer string descriptor: %s.",
-				libusb_error_name(ret));
-			continue;
-		}
-
-		if (des.iProduct == 0) {
-			product[0] = '\0';
-		} else if ((ret = libusb_get_string_descriptor_ascii(hdl,
-				des.iProduct, (unsigned char *) product,
-				sizeof(product))) < 0) {
-			sr_warn("Failed to get product string descriptor: %s.",
-				libusb_error_name(ret));
-			continue;
-		}
-
-		if (des.iSerialNumber == 0) {
-			serial_num[0] = '\0';
-		} else if ((ret = libusb_get_string_descriptor_ascii(hdl,
-				des.iSerialNumber, (unsigned char *) serial_num,
-				sizeof(serial_num))) < 0) {
-			sr_warn("Failed to get serial number string descriptor: %s.",
-				libusb_error_name(ret));
-			continue;
-		}
+		/*
+		 * Some devices (especially FX2 bootloader/EEPROM states) do not
+		 * answer string descriptor requests reliably. Missing strings are
+		 * not fatal: they only mean the firmware state cannot be derived
+		 * from the product string.
+		 */
+		manufacturer[0] = '\0';
+		product[0] = '\0';
+		serial_num[0] = '\0';
+		if (des.iManufacturer != 0 &&
+				libusb_get_string_descriptor_ascii(hdl,
+					des.iManufacturer, (unsigned char *) manufacturer,
+					sizeof(manufacturer)) < 0)
+			sr_dbg("Failed to get manufacturer string descriptor.");
+		if (des.iProduct != 0 &&
+				libusb_get_string_descriptor_ascii(hdl,
+					des.iProduct, (unsigned char *) product,
+					sizeof(product)) < 0)
+			sr_dbg("Failed to get product string descriptor.");
+		if (des.iSerialNumber != 0 &&
+				libusb_get_string_descriptor_ascii(hdl,
+					des.iSerialNumber, (unsigned char *) serial_num,
+					sizeof(serial_num)) < 0)
+			sr_dbg("Failed to get serial number string descriptor.");
 
 		libusb_close(hdl);
 
@@ -230,6 +269,8 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 		if (!prof)
 			continue;
+
+		api_version = dslogic_api_version_from_strings(manufacturer, product);
 
 		sdi = g_malloc0(sizeof(struct sr_dev_inst));
 		sdi->status = SR_ST_INITIALIZING;
@@ -253,13 +294,17 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 		sdi->priv = devc;
 		devices = g_slist_append(devices, sdi);
 
-		devc->samplerates = samplerates;
-		devc->num_samplerates = ARRAY_SIZE(samplerates);
-		has_firmware = usb_match_manuf_prod(devlist[i], "DreamSourceLab", "USB-based Instrument");
+		if (strcmp("DSLogic U3Pro16", devc->profile->model) == 0) {
+			devc->samplerates = samplerates_U3Pro16;
+			devc->num_samplerates = ARRAY_SIZE(samplerates_U3Pro16);
+		} else {
+			devc->samplerates = samplerates;
+			devc->num_samplerates = ARRAY_SIZE(samplerates);
 
-		if (has_firmware) {
+		}
+		if (api_version != DS_API_V_UNKNOWN) {
 			/* Already has the firmware, so fix the new address. */
-			sr_dbg("Found a DSLogic device.");
+			sr_dbg("Found a DSLogic device with API version %d", api_version);
 			sdi->status = SR_ST_INACTIVE;
 			sdi->inst_type = SR_INST_USB;
 			sdi->conn = sr_usb_dev_inst_new(libusb_get_bus_number(devlist[i]),
@@ -362,10 +407,11 @@ static int dev_open(struct sr_dev_inst *sdi)
 
 	if (devc->cur_threshold == 0.0) {
 		devc->cur_threshold = thresholds[1][0];
-		return dslogic_set_voltage_threshold(sdi, devc->cur_threshold);
+		ret = dslogic_set_voltage_threshold(sdi, devc->cur_threshold);
 	}
+	devc->continuous_mode = TRUE;
 
-	return SR_OK;
+	return ret;
 }
 
 static int dev_close(struct sr_dev_inst *sdi)

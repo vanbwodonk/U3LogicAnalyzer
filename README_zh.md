@@ -186,6 +186,20 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 
 ## 常见问题
 
+- DreamSourceLab DSLogic 无法识别，或固件/FPGA 上传失败？驱动需要
+  DreamSourceLab 的固件文件。若系统已安装 DSView，`./build_linux.sh` 会
+  自动从 `/usr/share/DSView/res` 复制 FPGA 位流。手动安装（AUR 包同样
+  适用）：
+
+  ```bash
+  mkdir -p ~/.local/share/sigrok-firmware
+  cp /usr/share/DSView/res/DSLogicPlus.bin \
+     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fpga.fw
+  # 部分发行版的 DSView 包缺少 DSLogicPlus.fw，可用 DSLogic.fw 兜底
+  cp /usr/share/DSView/res/DSLogic.fw \
+     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fx2.fw
+  ```
+
 - **解码器菜单是空的？** 现在已自动发现解码器；若仍为空，检查
   `build/install/share/libsigrokdecode/decoders` 是否存在，或设置
   `SIGROKDECODE_DIR` 指向它后重启。
