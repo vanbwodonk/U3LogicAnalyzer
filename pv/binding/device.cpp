@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 #include <QDebug>
 
@@ -54,8 +55,10 @@ using pv::prop::Property;
 namespace pv {
 namespace binding {
 
-Device::Device(shared_ptr<sigrok::Configurable> configurable) :
-	configurable_(configurable)
+Device::Device(shared_ptr<sigrok::Configurable> configurable,
+		set<uint32_t> skip_keys) :
+	configurable_(configurable),
+	skip_keys_(std::move(skip_keys))
 {
 
 	auto keys = configurable->config_keys();
@@ -65,6 +68,9 @@ Device::Device(shared_ptr<sigrok::Configurable> configurable) :
 		dslogic = dev->vendor() == "DreamSourceLab";
 
 	for (auto key : keys) {
+
+		if (skip_keys_.count(key->id()))
+			continue;
 
 		string descr_str;
 		try {

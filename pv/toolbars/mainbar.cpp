@@ -726,6 +726,15 @@ namespace pv
 					// CH32H417: 固定16个采样率，不随通道数变化
 					num_elements = 16;
 				}
+				else if (vendor == "DreamSourceLab" && dslogic_max_samplerate_ > 0)
+				{
+					// DSLogic: hide rates above the current channel mode limit.
+					gsize n = 0;
+					while (n < num_elements && elements[n] <= dslogic_max_samplerate_)
+						++n;
+					if (n > 0)
+						num_elements = n;
+				}
 				sample_rate_.show_list(elements, num_elements);
 				// if (is_rate_setting_default_){
 				// 	sample_rate_.set_current_index(sample_rate_default_index_);
@@ -843,6 +852,15 @@ namespace pv
 					commit_sample_count();
 				}
 			}
+			else
+			{
+				// Drivers such as DSLogic report a zero limit until one is
+				// explicitly selected. Set a sane default so the first
+				// acquisition does not get LIMIT_SAMPLES = 0.
+				sample_count = DefaultSampleCount;
+				sample_count_.set_time_value(sample_count, sampleRate);
+				commit_sample_count();
+			}
 			updating_sample_count_ = false;
 
 			// If we show the default rate then make sure the device uses the same
@@ -861,6 +879,22 @@ namespace pv
 			QString vendor = QString::fromStdString(device->device()->vendor());
 			QString model = QString::fromStdString(device->device()->model());
 			bool is_ch32h417 = (vendor == "USB3.0(CH32H417)" || model == "USB3.0(CH32H417)");
+			bool is_dslogic = (vendor == "DreamSourceLab" &&
+				model.contains("DSLogic", Qt::CaseInsensitive));
+
+			// DreamSourceLab DSLogic: limit the sample rate list to the
+			// maximum supported by the selected buffer/stream channel mode.
+			if (is_dslogic) {
+				dslogic_max_samplerate_ = maxSampleRate;
+				uint64_t desired = sample_rate_value_;
+				if (desired == 0 || desired > maxSampleRate)
+					desired = maxSampleRate;
+				update_sample_rate_selector();
+				sample_rate_.set_value(desired);
+				commit_sample_rate();
+				update_sample_rate_selector_value();
+				return;
+			}
 
 			// CH32H417处理
 			if (is_ch32h417)
@@ -1500,8 +1534,9 @@ namespace pv
 				sr_dev->config_set(ConfigKey::SAMPLERATE,
 								   Glib::Variant<guint64>::create(sample_rate));
 				sample_count = ((double)sample_count_.get_current_data(sample_count_.get_current_index())) / 10000.00 * (double)sample_rate_.get_current_data(sample_rate_.get_current_index());
-				sr_dev->config_set(ConfigKey::LIMIT_SAMPLES,
-								   Glib::Variant<guint64>::create(sample_count));
+				if (sample_count > 0)
+					sr_dev->config_set(ConfigKey::LIMIT_SAMPLES,
+									   Glib::Variant<guint64>::create(sample_count));
 				// update_sample_rate_selector();
 			}
 			catch (Error &error)
@@ -1627,7 +1662,7 @@ namespace pv
 				else if (sample_count > max_samples)
 					sample_count = (uint64_t)max_samples;
 			}
-			if (sample_count_supported_)
+			if (sample_count_supported_ && sample_count > 0)
 			{
 				try
 				{

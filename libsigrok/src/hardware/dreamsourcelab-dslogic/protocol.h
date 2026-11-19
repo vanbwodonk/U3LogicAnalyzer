@@ -35,7 +35,7 @@
 #define USB_CONFIGURATION	1
 
 #define MAX_RENUM_DELAY_MS	3000
-#define NUM_SIMUL_TRANSFERS	32
+#define NUM_SIMUL_TRANSFERS	64
 #define MAX_EMPTY_TRANSFERS	(NUM_SIMUL_TRANSFERS * 2)
 
 #define NUM_CHANNELS		16
@@ -161,6 +161,7 @@ struct dev_context {
 	uint32_t trigger_pos;
 	gboolean external_clock;
 	gboolean continuous_mode;
+	gboolean rle_mode;
 	int clock_edge;
 	double cur_threshold;
 	GThread *thread_handle;

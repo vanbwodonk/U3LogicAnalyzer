@@ -748,6 +748,16 @@ install(FILES firmware/dreamsourcelab/LICENSE
     RENAME dreamsourcelab-firmware-LICENSE
 )
 
+# USB access rules for libsigrok hardware (DreamSourceLab, Saleae, etc.).
+# Arch uses systemd-logind uaccess ACLs; install the generic + uaccess rules.
+if(UNIX AND NOT APPLE)
+    install(FILES
+        libsigrok/contrib/60-libsigrok.rules
+        libsigrok/contrib/61-libsigrok-uaccess.rules
+        DESTINATION lib/udev/rules.d
+    )
+endif()
+
 # Install the manpage.
 install(FILES doc/pulseview.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 

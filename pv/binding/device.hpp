@@ -21,6 +21,7 @@
 #define PULSEVIEW_PV_BINDING_DEVICE_HPP
 
 #include <functional>
+#include <set>
 
 #include <boost/optional.hpp>
 
@@ -47,7 +48,8 @@ class Device : public Binding
 	Q_OBJECT
 
 public:
-	Device(shared_ptr<sigrok::Configurable> configurable);
+	Device(shared_ptr<sigrok::Configurable> configurable,
+		set<uint32_t> skip_keys = {});
 
 Q_SIGNALS:
 	void config_changed();
@@ -73,6 +75,7 @@ private:
 
 protected:
 	shared_ptr<sigrok::Configurable> configurable_;
+	set<uint32_t> skip_keys_;
 };
 
 }  // namespace binding

@@ -16,7 +16,14 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
   DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
 - Bundled DreamSourceLab firmware (no separate DSView installation needed)
 - Hardware-aware Device Options: voltage threshold (DSLogic: 0.0-5.0 V in
-  0.1 V steps), stream/buffer mode, capture ratio, external clock and clock edge
+  0.1 V steps), Buffer/Stream mode, RLE, capture ratio, external clock and
+  clock edge
+- DSLogic channel modes: Buffer 4 ch @ 400 MHz / 8 ch @ 200 MHz / 16 ch @
+  100 MHz and Stream 3 ch @ 100 MHz / 6 ch @ 50 MHz / 12 ch @ 25 MHz /
+  16 ch @ 20 MHz
+- For long captures prefer Stream mode: buffer mode uploads only after the
+  acquisition finishes, while stream mode transfers data during acquisition
+  (2 s @ 10 MHz / 16 ch: ~2.0 s stream vs ~3.4 s buffer)
   - Windows: CH375 driver mode (CH375DLL)
   - macOS / Linux: libusb transport inside the driver, no kernel module
     required (protocol based on WCH's official CH37X_LINUX SDK)
@@ -154,6 +161,21 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
   analyzers also need the `sigrok-firmware-fx2lafw` firmware files installed
   (or `SIGROK_FIRMWARE_DIR` set).
+- DSLogic is not detected on Linux and the log says `LIBUSB_ERROR_ACCESS`?
+  USB access requires udev rules. The AUR package installs them to
+  `/usr/lib/udev/rules.d/60-libsigrok.rules` and
+  `61-libsigrok-uaccess.rules`; replug the analyzer after installation. For
+  a build-tree run, install them manually:
+
+  ```bash
+  sudo install -Dm644 libsigrok/contrib/60-libsigrok.rules \
+     /usr/lib/udev/rules.d/60-libsigrok.rules
+  sudo install -Dm644 libsigrok/contrib/61-libsigrok-uaccess.rules \
+     /usr/lib/udev/rules.d/61-libsigrok-uaccess.rules
+  sudo udevadm control --reload-rules
+  sudo udevadm trigger
+  ```
+
 - DreamSourceLab DSLogic not detected, or firmware/FPGA upload fails? All
   supported DreamSourceLab firmware is bundled in
   [`firmware/dreamsourcelab/`](firmware/dreamsourcelab) and is installed to

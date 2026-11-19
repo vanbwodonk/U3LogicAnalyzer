@@ -77,6 +77,7 @@ public:
 		CH32H417_USB3_LOGIC,
 		CH32H417_USB2_LOGIC,
 		CH32H417_ADC,
+		DSLOGIC,
 		OTHER
 	};
 
@@ -124,6 +125,9 @@ private:
 	void init_ui();
 	void init_wch_ui();
 	void init_other_ui();
+	void init_dslogic_ui();
+	void rebuild_dslogic_channel_radios();
+	void apply_dslogic_channel_mode(int index);
 	void init_channel_radios(QVBoxLayout* layout);
 	void init_threshold_selectors(QFormLayout* layout);
 	void init_channel_state();
@@ -157,6 +161,13 @@ private:
 	QLabel* threshold_label_;
 	QGroupBox* logic_props_box_;
 	QGroupBox* analog_props_box_;
+
+	QComboBox* dslogic_operation_mode_;
+	QCheckBox* dslogic_rle_;
+	QDoubleSpinBox* dslogic_threshold_;
+	QGroupBox* dslogic_channel_group_;
+	QVBoxLayout* dslogic_channel_layout_;
+	vector<QRadioButton*> dslogic_channel_radios_;
 
 	vector<QCheckBox*> logic_checkboxes_;
 	vector<QCheckBox*> analog_checkboxes_;

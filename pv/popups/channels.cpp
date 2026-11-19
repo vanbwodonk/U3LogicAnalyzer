@@ -20,6 +20,7 @@
  */
 
 #include <map>
+#include <set>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -89,6 +90,11 @@ Channels::Channels(Session &session, QString device_name, QWidget *parent) :
 	threshold_label_(nullptr),
 	logic_props_box_(nullptr),
 	analog_props_box_(nullptr),
+	dslogic_operation_mode_(nullptr),
+	dslogic_rle_(nullptr),
+	dslogic_threshold_(nullptr),
+	dslogic_channel_group_(nullptr),
+	dslogic_channel_layout_(nullptr),
 	check_box_mapper_(this),
 	channel_max_(16),
 	skip_hardware_command_(false)
@@ -207,6 +213,11 @@ Channels::DeviceMode Channels::determineDeviceMode() const
 	WchDeviceType wch_type = get_wch_device_type(device_name_);
 
 	if (wch_type == WchDeviceType::None) {
+		const shared_ptr<devices::Device> pv_dev = session_.device();
+		if (pv_dev && pv_dev->device() &&
+				QString::fromStdString(pv_dev->device()->model())
+					.contains("DSLogic", Qt::CaseInsensitive))
+			return DeviceMode::DSLOGIC;
 		return DeviceMode::OTHER;
 	}
 
@@ -242,7 +253,26 @@ void Channels::init_ui()
 		signal_map[sig->channel()] = sig;
 	}
 
-	if (device_mode_ != DeviceMode::OTHER) {
+	if (device_mode_ == DeviceMode::DSLOGIC) {
+		init_dslogic_ui();
+
+		// Remaining generic device options (capture ratio, external clock,
+		// clock edge). Continuous/RLE/threshold are provided by the
+		// DSLogic-specific controls above.
+		hardware_binding_ = make_shared<binding::Device>(
+			std::static_pointer_cast<sigrok::Configurable>(device),
+			std::set<uint32_t>{SR_CONF_CONTINUOUS, SR_CONF_RLE,
+				SR_CONF_VOLTAGE_THRESHOLD});
+		if (!hardware_binding_->properties().empty()) {
+			QGroupBox* hardware_box =
+				new QGroupBox(tr("Hardware Configuration"), this);
+			QVBoxLayout* hardware_layout = new QVBoxLayout(hardware_box);
+			hardware_layout->setContentsMargins(0, 0, 0, 0);
+			hardware_layout->addWidget(hardware_binding_->get_property_form(
+				hardware_box, true));
+			acquisition_layout_->addRow(hardware_box);
+		}
+	} else if (device_mode_ != DeviceMode::OTHER) {
 		QGroupBox* options_box = new QGroupBox(tr("Configuration"), this);
 		QFormLayout* options_layout = new QFormLayout();
 		QVBoxLayout* vbox_layout = new QVBoxLayout();
@@ -320,6 +350,20 @@ void Channels::init_ui()
 	init_channel_state();
 
 	layout_.setRowWrapPolicy(QFormLayout::DontWrapRows);
+
+	if (device_mode_ == DeviceMode::DSLOGIC) {
+		// MainBar connects our signals after this constructor returns; apply
+		// the initial channel mode once the event loop is running so the
+		// sample-rate limit reaches the toolbar as well.
+		QTimer::singleShot(0, this, [this]() {
+			for (size_t i = 0; i < dslogic_channel_radios_.size(); ++i) {
+				if (dslogic_channel_radios_[i]->isChecked()) {
+					apply_dslogic_channel_mode((int)i);
+					break;
+				}
+			}
+		});
+	}
 }
 
 void Channels::init_wch_ui()
@@ -330,6 +374,210 @@ void Channels::init_wch_ui()
 void Channels::init_other_ui()
 {
 	// 非WCH设备无额外UI
+}
+
+void Channels::init_dslogic_ui()
+{
+	const shared_ptr<sigrok::Device> sr_dev = session_.device()->device();
+
+	QGroupBox* options_box = new QGroupBox(tr("DSLogic Options"), this);
+	QFormLayout* form = new QFormLayout(options_box);
+
+	dslogic_operation_mode_ = new QComboBox();
+	dslogic_operation_mode_->addItem(tr("Buffer Mode"), false);
+	dslogic_operation_mode_->addItem(tr("Stream Mode"), true);
+	bool stream = false;
+	try {
+		auto gvar = sr_dev->config_get(sigrok::ConfigKey::CONTINUOUS);
+		if (gvar.gobj())
+			stream = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(gvar).get();
+	} catch (sigrok::Error&) {
+	}
+	dslogic_operation_mode_->setCurrentIndex(stream ? 1 : 0);
+	form->addRow(tr("Operation Mode"), dslogic_operation_mode_);
+
+	QComboBox* stop_options = new QComboBox();
+	stop_options->addItem(tr("Upload captured data"));
+	stop_options->setEnabled(false);
+	form->addRow(tr("Stop Options"), stop_options);
+
+	dslogic_threshold_ = new QDoubleSpinBox();
+	dslogic_threshold_->setRange(0.0, 5.0);
+	dslogic_threshold_->setSingleStep(0.1);
+	dslogic_threshold_->setDecimals(1);
+	dslogic_threshold_->setSuffix(" V");
+	try {
+		auto gvar = sr_dev->config_get(sigrok::ConfigKey::VOLTAGE_THRESHOLD);
+		if (gvar.gobj()) {
+			gdouble lo = 0.0, hi = 0.0;
+			g_variant_get(gvar.gobj(), "(dd)", &lo, &hi);
+			dslogic_threshold_->setValue(lo);
+		}
+	} catch (sigrok::Error&) {
+	}
+	form->addRow(tr("Threshold Level"), dslogic_threshold_);
+
+	QComboBox* filter_targets = new QComboBox();
+	filter_targets->addItem(tr("None"));
+	filter_targets->setEnabled(false);
+	form->addRow(tr("Filter Targets"), filter_targets);
+
+	QComboBox* max_height = new QComboBox();
+	max_height->addItem("1X");
+	max_height->setEnabled(false);
+	form->addRow(tr("Max Height"), max_height);
+
+	dslogic_rle_ = new QCheckBox(tr("Enable RLE Compress"));
+	try {
+		auto gvar = sr_dev->config_get(sigrok::ConfigKey::RLE);
+		if (gvar.gobj())
+			dslogic_rle_->setChecked(
+				Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(gvar).get());
+	} catch (sigrok::Error&) {
+	}
+	form->addRow(dslogic_rle_);
+
+	acquisition_layout_->addRow(options_box);
+
+	dslogic_channel_group_ = new QGroupBox(tr("Channel"), this);
+	dslogic_channel_layout_ = new QVBoxLayout(dslogic_channel_group_);
+	acquisition_layout_->addRow(dslogic_channel_group_);
+
+	rebuild_dslogic_channel_radios();
+
+	connect(dslogic_operation_mode_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, [this](int index) {
+			const shared_ptr<sigrok::Device> dev = session_.device()->device();
+			try {
+				dev->config_set(sigrok::ConfigKey::CONTINUOUS,
+					Glib::Variant<bool>::create(index == 1));
+			} catch (sigrok::Error&) {
+			}
+			rebuild_dslogic_channel_radios();
+			apply_dslogic_channel_mode(0);
+		});
+	connect(dslogic_rle_, &QCheckBox::toggled, this, [this](bool enabled) {
+		const shared_ptr<sigrok::Device> dev = session_.device()->device();
+		try {
+			dev->config_set(sigrok::ConfigKey::RLE,
+				Glib::Variant<bool>::create(enabled));
+		} catch (sigrok::Error&) {
+		}
+	});
+	connect(dslogic_threshold_, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+		this, [this](double value) {
+		const shared_ptr<sigrok::Device> dev = session_.device()->device();
+		GVariant* gvar = g_variant_new("(dd)", value, value);
+		try {
+			dev->config_set(sigrok::ConfigKey::VOLTAGE_THRESHOLD,
+				Glib::VariantBase(gvar, false));
+		} catch (sigrok::Error&) {
+		}
+	});
+}
+
+void Channels::rebuild_dslogic_channel_radios()
+{
+	if (!dslogic_channel_layout_)
+		return;
+
+	for (QRadioButton* radio : dslogic_channel_radios_) {
+		dslogic_channel_layout_->removeWidget(radio);
+		radio->deleteLater();
+	}
+	dslogic_channel_radios_.clear();
+
+	const bool stream = dslogic_operation_mode_ &&
+		dslogic_operation_mode_->currentIndex() == 1;
+
+	struct Mode {
+		uint16_t channels;
+		uint64_t max_samplerate;
+	};
+	static const Mode buffer_modes[] = {
+		{16, SR_MHZ(100)},
+		{8, SR_MHZ(200)},
+		{4, SR_MHZ(400)},
+	};
+	static const Mode stream_modes[] = {
+		{16, SR_MHZ(20)},
+		{12, SR_MHZ(25)},
+		{6, SR_MHZ(50)},
+		{3, SR_MHZ(100)},
+	};
+	const Mode* modes = stream ? stream_modes : buffer_modes;
+	const int count = stream ? 4 : 3;
+
+	for (int i = 0; i < count; ++i) {
+		QRadioButton* radio = new QRadioButton(
+			tr("Use %1 Channels (Max %2 MHz)")
+				.arg(modes[i].channels)
+				.arg(modes[i].max_samplerate / SR_MHZ(1)),
+			dslogic_channel_group_);
+		radio->setMinimumHeight(radio->fontMetrics().height() + 10);
+		dslogic_channel_layout_->addWidget(radio);
+		dslogic_channel_radios_.push_back(radio);
+		connect(radio, &QRadioButton::clicked, this,
+			[this, i]() { apply_dslogic_channel_mode(i); });
+	}
+
+	// Default to all channels; the user can trade channel count for rate.
+	const int default_index = 0;
+	dslogic_channel_radios_[default_index]->setChecked(true);
+	channel_max_ = modes[default_index].channels;
+}
+
+void Channels::apply_dslogic_channel_mode(int index)
+{
+	const bool stream = dslogic_operation_mode_ &&
+		dslogic_operation_mode_->currentIndex() == 1;
+
+	struct Mode {
+		uint16_t channels;
+		uint64_t max_samplerate;
+	};
+	static const Mode buffer_modes[] = {
+		{16, SR_MHZ(100)},
+		{8, SR_MHZ(200)},
+		{4, SR_MHZ(400)},
+	};
+	static const Mode stream_modes[] = {
+		{16, SR_MHZ(20)},
+		{12, SR_MHZ(25)},
+		{6, SR_MHZ(50)},
+		{3, SR_MHZ(100)},
+	};
+	const Mode* modes = stream ? stream_modes : buffer_modes;
+	const int count = stream ? 4 : 3;
+	if (index < 0 || index >= count)
+		return;
+
+	const Mode& mode = modes[index];
+	channel_max_ = mode.channels;
+
+	updating_channels_ = true;
+	for (int i = 0; i < (int)logic_checkboxes_.size(); ++i) {
+		const bool enabled = i < mode.channels;
+		logic_checkboxes_[i]->setChecked(enabled);
+		logic_checkboxes_[i]->setEnabled(enabled);
+		auto it = checkbox_signal_map_.find(logic_checkboxes_[i]);
+		if (it != checkbox_signal_map_.end())
+			it->second->set_enabled(enabled);
+	}
+	updating_channels_ = false;
+
+	const shared_ptr<sigrok::Device> dev = session_.device()->device();
+	try {
+		dev->config_set(sigrok::ConfigKey::CONTINUOUS,
+			Glib::Variant<bool>::create(stream));
+		dev->config_set(sigrok::ConfigKey::SAMPLERATE,
+			Glib::Variant<guint64>::create(mode.max_samplerate));
+	} catch (sigrok::Error&) {
+	}
+
+	session_.update_signals();
+	channel_selection_changed();
+	max_sample_rate_change(mode.max_samplerate);
 }
 
 void Channels::init_channel_state()
@@ -351,7 +599,15 @@ void Channels::init_channel_state()
 		}
 	}
 
-	if (device_mode_ == DeviceMode::OTHER) {
+	if (device_mode_ == DeviceMode::DSLOGIC) {
+		for (int i = 0; i < (int)logic_checkboxes_.size(); ++i) {
+			const bool enabled = i < channel_max_;
+			logic_checkboxes_[i]->setChecked(enabled);
+			auto it = checkbox_signal_map_.find(logic_checkboxes_[i]);
+			if (it != checkbox_signal_map_.end())
+				it->second->set_enabled(enabled);
+		}
+	} else if (device_mode_ == DeviceMode::OTHER) {
 		for (auto* cb : logic_checkboxes_) {
 			cb->setChecked(true);
 			auto it = checkbox_signal_map_.find(cb);
@@ -1093,6 +1349,22 @@ void Channels::on_channel_checked(QWidget* widget)
 
 	const shared_ptr<SignalBase> s = (*iter).second;
 	assert(s);
+
+	if (device_mode_ == DeviceMode::DSLOGIC) {
+		int index = 0;
+		for (size_t i = 0; i < logic_checkboxes_.size(); ++i) {
+			if (logic_checkboxes_[i] == check_box) {
+				index = (int)i;
+				break;
+			}
+		}
+		if (index >= channel_max_) {
+			updating_channels_ = true;
+			check_box->setChecked(false);
+			updating_channels_ = false;
+			return;
+		}
+	}
 
 	s->set_enabled(check_box->isChecked());
 }

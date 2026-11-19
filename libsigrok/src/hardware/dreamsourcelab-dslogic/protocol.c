@@ -933,11 +933,12 @@ static int fpga_configure(const struct sr_dev_inst *sdi)
 		if (devc->clock_edge == DS_EDGE_FALLING)
 			mode |= DS_MODE_CLK_EDGE;
 	}
-	if (devc->limit_samples > DS_MAX_LOGIC_DEPTH *
+	if (devc->rle_mode && devc->limit_samples > DS_MAX_LOGIC_DEPTH *
 		ceil(devc->cur_samplerate * 1.0 / devc->profile->max_samplerate)
 		&& !devc->continuous_mode) {
-		/* Enable RLE for long captures.
-		 * Without this, captured data present errors.
+		/* Enable RLE for captures that exceed the uncompressed depth.
+		 * Without this, captured data presents errors. DSView likewise
+		 * only enables hardware RLE when the requested duration needs it.
 		 */
 		mode |= DS_MODE_RLE_MODE;
 	}
@@ -1163,6 +1164,7 @@ SR_PRIV struct dev_context *dslogic_dev_new(void)
 	devc->limit_samples = 0;
 	devc->capture_ratio = 0;
 	devc->continuous_mode = FALSE;
+	devc->rle_mode = TRUE;
 	devc->clock_edge = DS_EDGE_RISING;
 
 	return devc;
@@ -1240,22 +1242,34 @@ static void resubmit_transfer(struct libusb_transfer *transfer)
 
 }
 
+static inline uint64_t transpose_8x8(uint64_t x)
+{
+	uint64_t t;
+
+	t = (x ^ (x >> 7)) & UINT64_C(0x00AA00AA00AA00AA);
+	x ^= t ^ (t << 7);
+	t = (x ^ (x >> 14)) & UINT64_C(0x0000CCCC0000CCCC);
+	x ^= t ^ (t << 14);
+	t = (x ^ (x >> 28)) & UINT64_C(0x00000000F0F0F0F0);
+	x ^= t ^ (t << 28);
+
+	return x;
+}
+
 static void deinterleave_buffer(const uint8_t *src, size_t length,
 	uint16_t *dst_ptr, size_t channel_count, uint16_t channel_mask)
 {
-	uint64_t *src_ptr = (uint64_t*)src;
-	uint64_t last_data[NUM_CHANNELS];
+	const uint64_t *src_ptr = (const uint64_t *)src;
+	uint64_t last_data[NUM_CHANNELS] = {0};
 	bool first_loop = TRUE;
-	unsigned int idx;
 
-	/* initially memset first samples of destination buffer to avoid
-	recording uninitialized garbage for channels which are not enabled */
+	/* initially zero the destination so channels which are not enabled
+	 * read as 0 */
 	memset(dst_ptr, 0, DSLOGIC_ATOMIC_SAMPLES * sizeof(uint16_t));
-	/* for first iteration, force last_data to be different */
 	for (unsigned int i = 0; i < channel_count; i++)
 		last_data[i] = ~src_ptr[i];
 
-	while (((uint8_t *)src_ptr) < (src + length)) {
+	while (((const uint8_t *)src_ptr) < (src + length)) {
 		if (G_LIKELY(!first_loop)) {
 			/* forward copy the previous data... */
 			memcpy(&dst_ptr[DSLOGIC_ATOMIC_SAMPLES], dst_ptr,
@@ -1263,23 +1277,42 @@ static void deinterleave_buffer(const uint8_t *src, size_t length,
 			dst_ptr += DSLOGIC_ATOMIC_SAMPLES;
 		} else
 			first_loop = FALSE;
-		idx = 0;
-		for (unsigned int channel = 0; channel != 16; channel++) {
-			/* ...and now selectively search for changes per channel */
-			if (channel_mask & (1 << channel)) {
-				if (last_data[idx] != src_ptr[idx]) {
-					for (unsigned int bit = 0; bit != DSLOGIC_ATOMIC_SAMPLES; bit++) {
-						if (src_ptr[idx] & (UINT64_C(1) << bit))
-							dst_ptr[bit] |= (1 << channel);
-						else
-							dst_ptr[bit] &= ~(uint16_t)(1 << channel);
-					}
-				}
-				idx++;
+
+		uint64_t words[NUM_CHANNELS] = {0};
+		memcpy(words, src_ptr, channel_count * sizeof(uint64_t));
+
+		bool unchanged = TRUE;
+		for (unsigned int channel = 0; channel < channel_count; channel++) {
+			if (last_data[channel] != words[channel]) {
+				unchanged = FALSE;
+				break;
 			}
 		}
 
-		memcpy(last_data, src_ptr, channel_count * sizeof(uint64_t));
+		if (!unchanged) {
+			/* Transpose the 16 x 64-bit block. Each output sample is
+			 * assembled from two 8 x 8 bit transposes, much faster
+			 * than testing each individual bit. */
+			for (unsigned int group = 0; group < 8; group++) {
+				uint64_t low = 0, high = 0;
+				for (unsigned int channel = 0; channel < 8; channel++)
+					low |= ((words[channel] >> (group * 8)) & 0xff) << (channel * 8);
+				for (unsigned int channel = 0; channel < 8; channel++)
+					high |= ((words[channel + 8] >> (group * 8)) & 0xff) << (channel * 8);
+
+				low = transpose_8x8(low);
+				high = transpose_8x8(high);
+
+				for (unsigned int sample = 0; sample < 8; sample++) {
+					const uint16_t value =
+						(uint16_t)(((low >> (sample * 8)) & 0xff) |
+						(((high >> (sample * 8)) & 0xff) << 8));
+					dst_ptr[group * 8 + sample] = value & channel_mask;
+				}
+			}
+		}
+
+		memcpy(last_data, words, channel_count * sizeof(uint64_t));
 		src_ptr += channel_count;
 	}
 }
@@ -1527,12 +1560,21 @@ static size_t to_bytes_per_ms(const struct sr_dev_inst *sdi)
 static size_t get_buffer_size(const struct sr_dev_inst *sdi)
 {
 	struct dev_context *devc = sdi->priv;
+
+	/* Buffer mode downloads device memory in 512 KiB blocks so several
+	 * URBs can be in flight within the common 16 MiB usbfs_memory_mb limit. */
+	if (!devc->continuous_mode)
+		return 512 * 1024;
+
 	/*
-	 * The buffer should be large enough to hold 10ms of data and
-	 * a multiple of the size of a data atom.
+	 * Stream buffers should hold 10ms (USB3) or 20ms (USB2) of data,
+	 * matching DSView's transfer sizing, and be a multiple of the size
+	 * of a data atom.
 	 */
 	const size_t block_size = enabled_channel_count(sdi) * devc->profile->block_size;
-	const size_t s = 10 * to_bytes_per_ms(sdi);
+	const size_t buffer_ms = (devc->profile->dev_caps & DSLOGIC_CAPS_USB30)
+		? 10 : 20;
+	const size_t s = buffer_ms * to_bytes_per_ms(sdi);
 	if (!block_size)
 		return s;
 	return ((s + block_size - 1) / block_size) * block_size;
@@ -1543,6 +1585,13 @@ static unsigned int get_number_of_transfers(const struct sr_dev_inst *sdi)
 	struct dev_context *devc = sdi->priv;
 	/* Total buffer size should be able to hold about 100ms of data. */
 	const unsigned int s = get_buffer_size(sdi);
+
+	/* Buffer mode can pipeline several 1 MiB downloads. A single
+	 * outstanding transfer leaves the USB2 bus idle between completion and
+	 * resubmission; DSView uses multiple transfers on Windows and this also
+	 * helps libusb on Linux. */
+	if (!devc->continuous_mode)
+		return 16;
 	const unsigned int n = (devc->profile->usb_buffer_duration_ms *
 					to_bytes_per_ms(sdi) + s - 1) / s;
 	return (n > NUM_SIMUL_TRANSFERS) ? NUM_SIMUL_TRANSFERS : n;

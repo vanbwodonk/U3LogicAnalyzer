@@ -15,7 +15,13 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
   串口万用表/电源、SCPI 仪器等
 - 内置 DreamSourceLab 固件（无需单独安装 DSView）
 - 硬件相关设备选项：阈值电压（DSLogic 0.0-5.0 V，0.1 V 步进）、
-  Stream/Buffer 模式、触发位置、外部时钟、时钟边沿
+  Buffer/Stream 模式、RLE、触发位置、外部时钟、时钟边沿
+- DSLogic 通道模式：Buffer 4 通道 @400MHz / 8 通道 @200MHz /
+  16 通道 @100MHz，Stream 3 通道 @100MHz / 6 通道 @50MHz /
+  12 通道 @25MHz / 16 通道 @20MHz
+- 长时间采集建议使用 Stream 模式：Buffer 模式要等采集结束后才上传数据，
+  Stream 模式边采集边传输（2 秒 @10MHz/16 通道：Stream 约 2.0 秒，
+  Buffer 约 3.4 秒）
   - Windows：原厂 CH375 驱动模式（CH375DLL）
   - macOS / Linux：驱动内置 **libusb 传输层**，无需任何内核驱动（协议参考
     WCH 官方 CH37X_LINUX SDK）
@@ -188,6 +194,20 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 3. 应用名统一为 **U3LogicAnalyzer**（.app 包名、Info.plist、窗口标题）。
 
 ## 常见问题
+
+- Linux 下 DSLogic 无法识别，日志显示 `LIBUSB_ERROR_ACCESS`？需要安装
+  udev 规则。AUR 包会安装到 `/usr/lib/udev/rules.d/60-libsigrok.rules`
+  和 `61-libsigrok-uaccess.rules`，安装后重新插拔分析仪即可。直接从
+  构建目录运行时可手动安装：
+
+  ```bash
+  sudo install -Dm644 libsigrok/contrib/60-libsigrok.rules \
+     /usr/lib/udev/rules.d/60-libsigrok.rules
+  sudo install -Dm644 libsigrok/contrib/61-libsigrok-uaccess.rules \
+     /usr/lib/udev/rules.d/61-libsigrok-uaccess.rules
+  sudo udevadm control --reload-rules
+  sudo udevadm trigger
+  ```
 
 - DreamSourceLab DSLogic 无法识别，或固件/FPGA 上传失败？所有受支持的
   DreamSourceLab 固件已随仓库放在

@@ -180,7 +180,17 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   vendored under `firmware/dreamsourcelab/` (DreamSourceLab MIT-style
   license), installed to `share/sigrok-firmware` by the top-level CMake
   install rules and by `build_linux.sh`. Do not reintroduce a build/runtime
-  dependency on DSView.
+  dependency on DSView. Linux USB access needs the `60-libsigrok.rules` and
+  `61-libsigrok-uaccess.rules` udev rules; CMake and the AUR package install
+  them to `/usr/lib/udev/rules.d`, and the package reloads udev. Replug a
+  device after installing the rules.
+- DSLogic acquisition modes are selected in the Device Options dialog. The
+  UI enables the first N channels and limits the toolbar samplerate list
+  (Buffer 4/8/16 ch at 400/200/100 MHz, Stream 3/6/12/16 ch at
+  100/50/25/20 MHz). The driver still exposes 16 probes; `MainBar` filters
+  rates via `dslogic_max_samplerate_`. Buffer mode pipelines up to 16
+  in-flight 512 KiB bulk transfers; the worker uses an 8x8 bit-transpose
+  instead of per-bit deinterleaving.
 - The acquisition path is sensitive to 8- vs 16-channel packing:
   `Segment::unit_size_temp` is `8 / channel_num`, and channel-bit offsets /
   `channel_switch_2` depend on it. A divide-by-zero/crash in the 16-channel

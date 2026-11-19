@@ -1824,6 +1824,18 @@ PulseView可能需要重新启动才能正确显示。</translation>
     <message><source>Channels</source><translation>通道</translation></message>
     <message><source>Configuration</source><translation>配置</translation></message>
     <message><source>Hardware Configuration</source><translation>硬件配置</translation></message>
+    <message><source>DSLogic Options</source><translation>DSLogic 选项</translation></message>
+    <message><source>Operation Mode</source><translation>操作模式</translation></message>
+    <message><source>Buffer Mode</source><translation>Buffer 模式</translation></message>
+    <message><source>Stream Mode</source><translation>Stream 模式</translation></message>
+    <message><source>Stop Options</source><translation>停止选项</translation></message>
+    <message><source>Upload captured data</source><translation>上传采集数据</translation></message>
+    <message><source>Threshold Level</source><translation>阈值电平</translation></message>
+    <message><source>Filter Targets</source><translation>过滤目标</translation></message>
+    <message><source>Max Height</source><translation>最大高度</translation></message>
+    <message><source>Enable RLE Compress</source><translation>启用 RLE 压缩</translation></message>
+    <message><source>Channel</source><translation>通道</translation></message>
+    <message><source>Use %1 Channels (Max %2 MHz)</source><translation>使用 %1 通道（最高 %2 MHz）</translation></message>
     <message><source>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;Threshold: 0.0 - 5.0 V in 0.1 V steps&lt;br/&gt;Buffer mode: 4 ch @ 400 MHz, 8 ch @ 200 MHz, 16 ch @ 100 MHz&lt;br/&gt;Stream mode: 3 ch @ 100 MHz, 6 ch @ 50 MHz, 12 ch @ 25 MHz, 16 ch @ 20 MHz</source><translation>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;阈值：0.0 - 5.0 V，步进 0.1 V&lt;br/&gt;Buffer 模式：4 通道 @ 400 MHz，8 通道 @ 200 MHz，16 通道 @ 100 MHz&lt;br/&gt;Stream 模式：3 通道 @ 100 MHz，6 通道 @ 50 MHz，12 通道 @ 25 MHz，16 通道 @ 20 MHz</translation></message>
 </context>
 <context>
