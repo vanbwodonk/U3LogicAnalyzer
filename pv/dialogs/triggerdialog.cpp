@@ -210,6 +210,39 @@ void TriggerDialog::rebuildStageTabs()
 	}
 }
 
+void TriggerDialog::loadTriggerIntoStages(shared_ptr<sigrok::Trigger> trigger)
+{
+	for (int s = 0; s < stage_combos_.size(); ++s) {
+		for (QComboBox *combo : stage_combos_[s]) {
+			if (combo)
+				combo->setCurrentIndex(0);
+		}
+	}
+
+	if (!trigger)
+		return;
+
+	int stage_index = 0;
+	for (const shared_ptr<sigrok::TriggerStage> &stage : trigger->stages()) {
+		if (stage_index >= stage_combos_.size())
+			break;
+		for (const shared_ptr<sigrok::TriggerMatch> &match : stage->matches()) {
+			for (int i = 0; i < logic_channels_.size(); ++i) {
+				if (logic_channels_[i]->channel() != match->channel())
+					continue;
+				QComboBox *combo = stage_combos_[stage_index][i];
+				if (combo) {
+					const int index = combo->findData(match->type()->id());
+					if (index >= 0)
+						combo->setCurrentIndex(index);
+				}
+				break;
+			}
+		}
+		stage_index++;
+	}
+}
+
 void TriggerDialog::loadCurrentTrigger()
 {
 	loading_ = true;
@@ -228,38 +261,20 @@ void TriggerDialog::loadCurrentTrigger()
 		position_spin_->setValue(1);
 	}
 
+	const bool advanced = session_.trigger_mode() == Session::TriggerAdvanced;
 	shared_ptr<sigrok::Trigger> trigger = session_.session()->trigger();
-	const int stage_count = trigger ?
+	if (!advanced && session_.simple_trigger())
+		trigger = session_.simple_trigger();
+
+	const int stage_count = advanced && trigger ?
 		(int)trigger->stages().size() : 1;
 
 	stages_spin_->setValue(std::max(1, std::min(16, stage_count)));
 	rebuildStageTabs();
+	loadTriggerIntoStages(trigger);
 
-	int stage_index = 0;
-	if (trigger) {
-		for (const shared_ptr<sigrok::TriggerStage> &stage : trigger->stages()) {
-			if (stage_index >= stage_combos_.size())
-				break;
-			for (const shared_ptr<sigrok::TriggerMatch> &match :
-					stage->matches()) {
-				for (int i = 0; i < logic_channels_.size(); ++i) {
-					if (logic_channels_[i]->channel() == match->channel()) {
-						if (stage_combos_[stage_index][i]) {
-							const int index = stage_combos_[stage_index][i]->findData(
-								match->type()->id());
-							if (index >= 0)
-								stage_combos_[stage_index][i]->setCurrentIndex(index);
-						}
-						break;
-					}
-				}
-			}
-			stage_index++;
-		}
-	}
-
-	advanced_radio_->setChecked(stage_count > 1);
-	simple_radio_->setChecked(stage_count <= 1);
+	advanced_radio_->setChecked(advanced);
+	simple_radio_->setChecked(!advanced);
 	loading_ = false;
 	updateAdvancedState();
 }
@@ -268,6 +283,16 @@ void TriggerDialog::onModeChanged()
 {
 	if (loading_)
 		return;
+
+	if (simple_radio_->isChecked() && !loading_) {
+		const bool was_loading = loading_;
+		loading_ = true;
+		stages_spin_->setValue(1);
+		rebuildStageTabs();
+		loadTriggerIntoStages(session_.simple_trigger() ?
+			session_.simple_trigger() : session_.session()->trigger());
+		loading_ = was_loading;
+	}
 
 	if (advanced_radio_->isChecked() && session_.device()) {
 		const shared_ptr<sigrok::Device> device = session_.device()->device();
@@ -350,8 +375,12 @@ void TriggerDialog::applyTrigger()
 		}
 	}
 
-	session_.session()->set_trigger(
-		trigger->stages().empty() ? nullptr : trigger);
+	shared_ptr<sigrok::Trigger> result =
+		trigger->stages().empty() ? nullptr : trigger;
+	if (advanced_radio_->isChecked())
+		session_.apply_advanced_trigger(result);
+	else
+		session_.apply_simple_trigger(result);
 
 	if (device->config_check(ConfigKey::CAPTURE_RATIO,
 			sigrok::Capability::SET)) {

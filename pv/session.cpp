@@ -627,6 +627,34 @@ void Session::on_renew_last_decoder_name(QString name)
 	decoder_name_last_ = name;
 }
 
+Session::TriggerMode Session::trigger_mode() const
+{
+	return trigger_mode_;
+}
+
+shared_ptr<sigrok::Trigger> Session::simple_trigger() const
+{
+	return simple_trigger_;
+}
+
+void Session::apply_simple_trigger(shared_ptr<sigrok::Trigger> trigger)
+{
+	simple_trigger_ = trigger;
+	trigger_mode_ = TriggerSimple;
+	session()->set_trigger(trigger);
+	Q_EMIT trigger_mode_changed();
+}
+
+void Session::apply_advanced_trigger(shared_ptr<sigrok::Trigger> trigger)
+{
+	if (trigger_mode_ == TriggerSimple)
+		simple_trigger_ = session()->trigger();
+
+	trigger_mode_ = TriggerAdvanced;
+	session()->set_trigger(trigger);
+	Q_EMIT trigger_mode_changed();
+}
+
 void Session::select_device(shared_ptr<devices::Device> device)
 {
 	try {

@@ -23,6 +23,10 @@ class QSlider;
 class QSpinBox;
 class QTabWidget;
 
+namespace sigrok {
+class Trigger;
+}
+
 namespace pv {
 
 class Session;
@@ -48,6 +52,7 @@ private Q_SLOTS:
 private:
 	void buildUi();
 	void rebuildStageTabs();
+	void loadTriggerIntoStages(std::shared_ptr<sigrok::Trigger> trigger);
 	void loadCurrentTrigger();
 	void updateAdvancedState();
 

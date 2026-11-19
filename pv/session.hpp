@@ -82,6 +82,7 @@ class Option;
 class OutputFormat;
 class Packet;
 class Session;
+class Trigger;
 }  // namespace sigrok
 
 using sigrok::Option;
@@ -120,6 +121,11 @@ class Session : public QObject
 	Q_OBJECT
 
 public:
+	enum TriggerMode {
+		TriggerSimple,
+		TriggerAdvanced
+	};
+
 	enum capture_state {
 		Stopped,
 		AwaitingTrigger,
@@ -189,6 +195,11 @@ public:
 		shared_ptr<sigrok::InputFormat> format = nullptr,
 		const map<string, Glib::VariantBase> &options =
 			map<string, Glib::VariantBase>());
+
+	TriggerMode trigger_mode() const;
+	shared_ptr<sigrok::Trigger> simple_trigger() const;
+	void apply_simple_trigger(shared_ptr<sigrok::Trigger> trigger);
+	void apply_advanced_trigger(shared_ptr<sigrok::Trigger> trigger);
 
 	capture_state get_capture_state() const;
 	void start_capture(function<void (const QString)> error_handler);
@@ -271,6 +282,7 @@ Q_SIGNALS:
 	void name_changed();
 
 	void trigger_event(int segment_id, util::Timestamp location);
+	void trigger_mode_changed();
 
 	void new_segment(int new_segment_id);
 	void segment_completed(int segment_id);
@@ -343,6 +355,8 @@ private:
 	volatile bool    is_wait_reattch_;
     volatile int     wait_reattch_times_;
 	std::shared_ptr<sigrok::Trigger> pre_trigger_ptr_;
+	TriggerMode trigger_mode_ = TriggerSimple;
+	std::shared_ptr<sigrok::Trigger> simple_trigger_;
 
 public:
 	bool is_repeat_acquisition_;

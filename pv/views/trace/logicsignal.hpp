@@ -124,6 +124,7 @@ protected:
 	const sigrok::TriggerMatchType* trigger_type_from_action(
 		QAction *action);
 	void populate_popup_form(QWidget *parent, QFormLayout *form);
+	void refresh_trigger_match();
 	void modify_trigger();
 
 	static const QIcon* get_icon(const char *path);

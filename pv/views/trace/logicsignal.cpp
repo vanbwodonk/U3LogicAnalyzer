@@ -108,15 +108,13 @@ LogicSignal::LogicSignal(pv::Session &session, shared_ptr<data::SignalBase> base
 	update_trace_colors(base_->color());
 	update_logic_level_offsets();
 
-	/* Populate this channel's trigger setting with whatever we
-	 * find in the current session trigger, if anything. */
-	trigger_match_ = nullptr;
-	if (shared_ptr<Trigger> trigger = session_.session()->trigger())
-		for (auto stage : trigger->stages())
-			for (auto match : stage->matches())
-				if (match->channel() == base_->channel())
-					trigger_match_ = match->type();
+	refresh_trigger_match();
 	connect(base.get(), SIGNAL(set_none_trigger()), this, SLOT(on_set_none_trigger()));
+	connect(&session_, &Session::trigger_mode_changed, this, [this]() {
+		refresh_trigger_match();
+		if (owner_)
+			owner_->row_item_appearance_changed(false, true);
+	});
 }
 
 void LogicSignal::update_trace_colors(const QColor &color)
@@ -384,7 +382,7 @@ void LogicSignal::paint_mid(QPainter &p, ViewItemPaintParams &pp)
 void LogicSignal::paint_fore(QPainter &p, ViewItemPaintParams &pp)
 {
 	if (base_->enabled()) {
-		if (trigger_match_) {
+		if (session_.trigger_mode() == Session::TriggerSimple && trigger_match_) {
 			// Draw the trigger marker
 			const int y = get_visual_y();
 
@@ -611,6 +609,19 @@ const TriggerMatchType *LogicSignal::trigger_type_from_action(QAction *action)
 		return nullptr;
 }
 
+void LogicSignal::refresh_trigger_match()
+{
+	trigger_match_ = nullptr;
+	if (session_.trigger_mode() != Session::TriggerSimple)
+		return;
+
+	if (shared_ptr<Trigger> trigger = session_.session()->trigger())
+		for (auto stage : trigger->stages())
+			for (auto match : stage->matches())
+				if (match->channel() == base_->channel())
+					trigger_match_ = match->type();
+}
+
 void LogicSignal::populate_popup_form(QWidget *parent, QFormLayout *form)
 {
 	Signal::populate_popup_form(parent, form);
@@ -624,12 +635,39 @@ void LogicSignal::populate_popup_form(QWidget *parent, QFormLayout *form)
 		this, SLOT(on_signal_height_changed(int)));
 	form->addRow(tr("Trace height"), signal_height_sb_);
 
-	// Trigger configuration lives in Device → Trigger Option. A per-channel
-	// toolbar here would conflict with advanced (multi-stage) triggers.
+	// Simple trigger mode keeps the per-channel trigger selection here. Advanced
+	// trigger mode owns all trigger settings centrally.
+	refresh_trigger_match();
+	if (session_.trigger_mode() == Session::TriggerSimple) {
+		const vector<int32_t> trig_types = get_trigger_types();
+		if (!trig_types.empty()) {
+			trigger_bar_ = new QToolBar(parent);
+			init_trigger_actions(trigger_bar_);
+			trigger_bar_->addAction(trigger_none_);
+			trigger_none_->setChecked(!trigger_match_);
+
+			for (auto type_id : trig_types) {
+				const TriggerMatchType *const type =
+					TriggerMatchType::get(type_id);
+				QAction *const action = action_from_trigger_type(type);
+				trigger_bar_->addAction(action);
+				action->setChecked(trigger_match_ == type);
+			}
+
+			if (session_.get_capture_state() != Session::Stopped)
+				for (QAction *action : trigger_bar_->findChildren<QAction *>())
+					action->setEnabled(false);
+
+			form->addRow(tr("Trigger"), trigger_bar_);
+		}
+	}
 }
 
 void LogicSignal::modify_trigger()
 {
+	if (session_.trigger_mode() != Session::TriggerSimple)
+		return;
+
 	auto trigger = session_.session()->trigger();
 	auto new_trigger = session_.device_manager().context()->create_trigger("pulseview");
 
@@ -661,7 +699,7 @@ void LogicSignal::modify_trigger()
 			trigger_match_);
 	}
 
-	session_.session()->set_trigger(
+	session_.apply_simple_trigger(
 		new_trigger->stages().empty() ? nullptr : new_trigger);
 
 	if (owner_)
