@@ -112,6 +112,17 @@ namespace pv
 {
 	namespace toolbars
 	{
+	static bool is_dslogic_device(const shared_ptr<devices::Device> &device)
+	{
+		if (!device || !device->device())
+			return false;
+
+		const QString vendor = QString::fromStdString(device->device()->vendor());
+		const QString model = QString::fromStdString(device->device()->model());
+		return vendor == "DreamSourceLab" &&
+			model.contains("DSLogic", Qt::CaseInsensitive);
+	}
+
 	MainBar *MainBar::s_mainbar_instance = nullptr;
 		const uint64_t MainBar::MinSampleCount = 12500ULL;
 		const uint64_t MainBar::MaxSampleCount = 1000000000000ULL;
@@ -950,8 +961,7 @@ namespace pv
 			QString vendor = QString::fromStdString(device->device()->vendor());
 			QString model = QString::fromStdString(device->device()->model());
 			bool is_ch32h417 = (vendor == "USB3.0(CH32H417)" || model == "USB3.0(CH32H417)");
-			bool is_dslogic = (vendor == "DreamSourceLab" &&
-				model.contains("DSLogic", Qt::CaseInsensitive));
+			bool is_dslogic = is_dslogic_device(device);
 
 			// DreamSourceLab DSLogic: limit the sample rate list to the
 			// maximum supported by the selected buffer/stream channel mode.
@@ -1057,14 +1067,7 @@ namespace pv
 		void MainBar::on_update_channel_count(uint16_t channelCount)
 		{
 			const shared_ptr<devices::Device> device = device_selector_.selected_device();
-			bool is_dslogic = false;
-			if (device && device->device())
-			{
-				const QString vendor = QString::fromStdString(device->device()->vendor());
-				const QString model = QString::fromStdString(device->device()->model());
-				is_dslogic = (vendor == "DreamSourceLab" &&
-					model.contains("DSLogic", Qt::CaseInsensitive));
-			}
+			const bool is_dslogic = is_dslogic_device(device);
 
 			// WCH only supports 8/16 channels. DSLogic buffer/stream modes use
 			// 3/4/6/8/12/16 channels.

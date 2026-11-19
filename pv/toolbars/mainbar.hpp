@@ -287,6 +287,9 @@ private:
 	uint64_t selected_sample_count_ = 0;
 	uint64_t sample_rate_value_ = SR_KHZ(500);
 	uint64_t dslogic_max_samplerate_ = 0;
+	// Number of channels used in timing/memory/rate math. For WCH this is the
+	// hardware channel count; for DSLogic it is the selected buffer/stream
+	// mode count, while the driver still exposes all 16 probes.
 	uint16_t channel_number_;
 	float thresholdValue_1_ = 1.0f;
 	float thresholdValue_2_ = 1.0f;
