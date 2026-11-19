@@ -147,6 +147,8 @@ namespace pv
 																							save_button_(new QToolButton()),
 																							help_button_(new QToolButton()),
 																							device_status_icon_(new QToolButton()),
+																							refresh_button_(new QToolButton(this)),
+																							disconnect_button_(new QToolButton(this)),
 																							device_selector_(parent, session.device_manager_ptr(), action_connect_),
 																							// configure_button_(this),
 																							// configure_button_action_(nullptr),
@@ -177,6 +179,24 @@ namespace pv
 			device_status_icon_->setText(tr("Not connected"));
 			device_status_icon_->setToolTip(tr("Device Status: Not connected"));
 			device_status_icon_->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+
+			refresh_button_->setIcon(QIcon(":/icons/refresh.svg"));
+			refresh_button_->setIconSize(QSize(18, 18));
+			refresh_button_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+			refresh_button_->setToolTip(tr("Scan for newly connected USB devices"));
+			refresh_button_->setFixedSize(32, 32);
+			connect(refresh_button_, &QToolButton::clicked,
+				this, &MainBar::refresh_devices_requested);
+
+			disconnect_button_->setIcon(QIcon(":/icons/disconnect.svg"));
+			disconnect_button_->setIconSize(QSize(18, 18));
+			disconnect_button_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+			disconnect_button_->setToolTip(tr("Disconnect the selected device"));
+			disconnect_button_->setFixedSize(32, 32);
+			disconnect_button_->setEnabled(false);
+			connect(disconnect_button_, &QToolButton::clicked,
+				this, &MainBar::disconnect_device_requested);
+
 			setObjectName(QString::fromUtf8("MainBar"));
 			sample_count_.set_prefix_text(tr("Duration"));
 			sample_rate_.set_prefix_text(tr("Sample rate"));
@@ -443,6 +463,8 @@ namespace pv
 			action_device_options_->setText(tr("Device Options"));
 			action_device_options_->setIcon(QIcon(":/icons/device-settings.svg"));
 			action_channel_configuration_->setText(tr("Device Options"));
+			refresh_button_->setToolTip(tr("Scan for newly connected USB devices"));
+			disconnect_button_->setToolTip(tr("Disconnect the selected device"));
 			action_channel_configuration_->setIcon(QIcon(":/icons/device-settings.svg"));
 			connect(action_device_options_, &QAction::triggered, this, [this]() {
 				if (channels_) channels_->show_acquisition_tab();
@@ -536,23 +558,54 @@ namespace pv
 				dynamic_pointer_cast<devices::HardwareDevice>(selected_device);
 			if (selected_hw &&
 				selected_hw->hardware_device()->driver()->name() != "demo" &&
-				std::find(devs.begin(), devs.end(), selected_device) == devs.end())
-				devs.push_back(selected_device);
+				std::find(devs.begin(), devs.end(), selected_device) == devs.end()) {
+				// A scan while the analyzer is open creates a new device
+				// wrapper for the same USB connection. Reuse the currently
+				// open wrapper instead of adding a second identical entry.
+				const shared_ptr<sigrok::Device> selected_sr = selected_device->device();
+				auto same_connection = [&selected_sr](const shared_ptr<devices::Device>& dev) {
+					const shared_ptr<sigrok::Device> sr = dev->device();
+					if (!selected_sr || !sr)
+						return false;
+					return selected_sr->connection_id() == sr->connection_id() &&
+						selected_sr->vendor() == sr->vendor() &&
+						selected_sr->model() == sr->model() &&
+						selected_sr->serial_number() == sr->serial_number();
+				};
+
+				bool replaced = false;
+				for (auto& dev : devs) {
+					if (same_connection(dev)) {
+						dev = selected_device;
+						replaced = true;
+						break;
+					}
+				}
+				if (!replaced)
+					devs.push_back(selected_device);
+			}
 			device_selector_.set_device_list(devs, selected_device);
 			const bool has_device = !!selected_device;
 			action_device_options_->setEnabled(has_device);
 			action_channel_configuration_->setEnabled(has_device);
+			disconnect_button_->setEnabled(has_device);
 			update_device_config_widgets();
+			// DeviceToolButton::set_device_list() resets the label to the
+			// generic display name. Restore the interface/USB status suffix
+			// (for example "DSLogic Plus · USB 2.0") after every refresh.
+			update_device_status_icon();
 		}
 
 		void MainBar::set_capture_state(pv::Session::capture_state state)
 		{
 			bool ui_enabled = (state == pv::Session::Stopped) ? true : false;
+			const bool has_device = !!device_selector_.selected_device();
 
 			device_selector_.setEnabled(ui_enabled);
+			refresh_button_->setEnabled(ui_enabled);
+			disconnect_button_->setEnabled(ui_enabled && has_device);
 			// configure_button_.setEnabled(ui_enabled);
 			// channels_button_.setEnabled(ui_enabled);
-			const bool has_device = !!device_selector_.selected_device();
 			channels_button_ex_->setEnabled(ui_enabled && has_device);
 			sample_count_.setEnabled(ui_enabled && has_device);
 			sample_rate_.setEnabled(ui_enabled && has_device);
@@ -2140,6 +2193,8 @@ namespace pv
 		void MainBar::add_toolbar_widgets()
 		{
 			addWidget(&device_selector_);
+			addWidget(refresh_button_);
+			addWidget(disconnect_button_);
 			QWidget *toolbar_spacer = new QWidget(this);
 			toolbar_spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 			toolbar_spacer->setStyleSheet("background: transparent; border: none;");
@@ -2261,6 +2316,8 @@ namespace pv
 			action_user_guide_->setText(tr("User Guide"));
 			action_device_options_->setText(tr("Device Options"));
 			action_channel_configuration_->setText(tr("Device Options"));
+			refresh_button_->setToolTip(tr("Scan for newly connected USB devices"));
+			disconnect_button_->setToolTip(tr("Disconnect the selected device"));
 
 			if (menu_new_view_) {
 				for (QAction *action : menu_new_view_->actions()) {

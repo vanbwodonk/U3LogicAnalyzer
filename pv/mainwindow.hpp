@@ -146,6 +146,7 @@ public Q_SLOTS:
 	void on_get_repeat_acquisition(bool& is_repeat_acquisition_state);
 	void on_device_attached();
 	void refresh_devices_now();
+	void disconnect_current_device();
 
 private:
 	void do_device_detach_switch();

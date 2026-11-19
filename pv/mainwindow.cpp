@@ -323,6 +323,10 @@ shared_ptr<views::ViewBase> MainWindow::add_view(views::ViewType type,
 			connect(main_bar.get(), SIGNAL(show_decoder_selector(Session*)),
 				this, SLOT(on_show_decoder_selector(Session*)));
 			connect(main_bar.get(), SIGNAL(run_stop_button_clicked()), this, SLOT(on_run_stop_clicked()));
+			connect(main_bar.get(), &MainBar::refresh_devices_requested,
+				this, &MainWindow::refresh_devices_now);
+			connect(main_bar.get(), &MainBar::disconnect_device_requested,
+				this, &MainWindow::disconnect_current_device);
 
 			main_bar->action_view_show_cursors()->setChecked(tv->cursors_shown());
 			session.set_main_bar(main_bar);
@@ -674,6 +678,27 @@ void MainWindow::refresh_devices_now()
 	refresh_hardware_devices();
 }
 
+void MainWindow::disconnect_current_device()
+{
+	if (!last_focused_session_)
+		return;
+
+	last_focused_session_->stop_capture();
+	last_focused_session_->disconnect_device();
+
+	if (last_focused_session_->main_bar()) {
+		last_focused_session_->main_bar()->reset_device_selector();
+		last_focused_session_->main_bar()->update_device_list();
+	}
+
+	// Do not let the periodic presence poll immediately reconnect the
+	// still-present analyzer. The refresh button (or selecting it from the
+	// device menu) will connect it again.
+	pending_presence_change_ = PresenceChange::Unchanged;
+	device_refresh_timer_.stop();
+	force_device_refresh_ = false;
+}
+
 void MainWindow::set_not_connected()
 {
 	for (const shared_ptr<Session> &session : sessions_) {
@@ -690,23 +715,31 @@ void MainWindow::refresh_hardware_devices()
 	const bool had_device = last_focused_session_ &&
 		dynamic_pointer_cast<devices::HardwareDevice>(
 			last_focused_session_->device());
+	const bool explicit_refresh = force_device_refresh_;
+	force_device_refresh_ = false;
 
 	// A refresh while the active analyzer is still present must not clear
 	// captured data by tearing down and reselecting the same device. An
-	// explicit "Refresh Devices" request always rescans.
-	if (!force_device_refresh_ && had_device &&
+	// explicit refresh must scan for new hardware, but can keep the existing
+	// connection open while doing so.
+	const bool keep_connected = explicit_refresh && had_device &&
+		pending_presence_change_ != PresenceChange::Removed &&
+		pending_presence_change_ != PresenceChange::Replaced;
+
+	if (!explicit_refresh && had_device &&
 			(pending_presence_change_ == PresenceChange::Unchanged ||
 			pending_presence_change_ == PresenceChange::Added)) {
 		pending_presence_change_ = PresenceChange::Unchanged;
 		return;
 	}
-	force_device_refresh_ = false;
 
-	for (const shared_ptr<Session> &session : sessions_) {
-		if (dynamic_pointer_cast<devices::HardwareDevice>(session->device()))
-			session->disconnect_device();
-		if (session->main_bar())
-			session->main_bar()->reset_device_selector();
+	if (!keep_connected) {
+		for (const shared_ptr<Session> &session : sessions_) {
+			if (dynamic_pointer_cast<devices::HardwareDevice>(session->device()))
+				session->disconnect_device();
+			if (session->main_bar())
+				session->main_bar()->reset_device_selector();
+		}
 	}
 
 	// libsigrok drivers keep process-global state, so retain one Context for
@@ -736,6 +769,19 @@ void MainWindow::refresh_hardware_devices()
 				break;
 			}
 		}
+	}
+
+	if (keep_connected && last_focused_session_ &&
+			last_focused_session_->device()) {
+		// The previous analyzer is still connected. Refresh the selector so
+		// newly detected devices appear in the menu without closing/reopening
+		// the active device or discarding captured data.
+		pending_presence_change_ = PresenceChange::Unchanged;
+		reconnect_requires_selection_ = false;
+		device_scan_retries_ = 0;
+		if (last_focused_session_->main_bar())
+			last_focused_session_->main_bar()->update_device_list();
+		return;
 	}
 
 	if (had_device && !selected)

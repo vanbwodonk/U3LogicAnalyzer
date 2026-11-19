@@ -2429,6 +2429,8 @@ Latest: %2</source><translation>发现新版本。
     <message><source>Hardware device</source><translation>硬件设备</translation></message>
     <message><source>Device Status: %1</source><translation>设备状态：%1</translation></message>
     <message><source>User Guide</source><translation>使用指南</translation></message>
+    <message><source>Scan for newly connected USB devices</source><translation>扫描新连接的 USB 设备</translation></message>
+    <message><source>Disconnect the selected device</source><translation>断开当前设备</translation></message>
 </context>
 <context>
     <name>pv::views</name>

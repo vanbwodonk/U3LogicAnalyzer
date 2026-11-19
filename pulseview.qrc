@@ -61,6 +61,8 @@
 	<file>icons/repeat.svg</file>
 	<file>icons/help-circle.svg</file>
 	<file>icons/device-settings.svg</file>
+	<file>icons/refresh.svg</file>
+	<file>icons/disconnect.svg</file>
 	<file>icons/measure.svg</file>
 	<file>icons/decoder.svg</file>
 	<file>icons/decode-result.svg</file>

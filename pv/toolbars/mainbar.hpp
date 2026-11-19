@@ -228,6 +228,8 @@ Q_SIGNALS:
 	void new_view(Session *session, int type);
 	void show_decoder_selector(Session *session);
 	void divice_detached();
+	void refresh_devices_requested();
+	void disconnect_device_requested();
 	void device_attached();
 	void run_stop_button_clicked();
 	void ch32h417_device_event_signal(unsigned long eventStatus);
@@ -258,6 +260,8 @@ private:
 	QToolButton *new_view_button_, *open_button_, *save_button_;
 	QToolButton *help_button_;
 	QToolButton *device_status_icon_;
+	QToolButton *refresh_button_;
+	QToolButton *disconnect_button_;
 
 	pv::widgets::DeviceToolButton device_selector_;
 
