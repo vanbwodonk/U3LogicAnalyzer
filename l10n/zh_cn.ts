@@ -1836,6 +1836,13 @@ PulseView可能需要重新启动才能正确显示。</translation>
     <message><source>Enable RLE Compress</source><translation>启用 RLE 压缩</translation></message>
     <message><source>Channel</source><translation>通道</translation></message>
     <message><source>Use %1 Channels (Max %2 MHz)</source><translation>使用 %1 通道（最高 %2 MHz）</translation></message>
+    <message><source>Failed to read operation mode, defaulting to Buffer Mode:</source><translation>读取操作模式失败，默认使用 Buffer 模式：</translation></message>
+    <message><source>Failed to read threshold level, using device default:</source><translation>读取阈值电平失败，使用设备默认值：</translation></message>
+    <message><source>Failed to read RLE setting, using device default:</source><translation>读取 RLE 设置失败，使用设备默认值：</translation></message>
+    <message><source>Failed to set operation mode:</source><translation>设置操作模式失败：</translation></message>
+    <message><source>Failed to set RLE compress:</source><translation>设置 RLE 压缩失败：</translation></message>
+    <message><source>Failed to set threshold level:</source><translation>设置阈值电平失败：</translation></message>
+    <message><source>Failed to apply channel mode (mode/samplerate):</source><translation>应用通道模式（模式/采样率）失败：</translation></message>
     <message><source>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;Threshold: 0.0 - 5.0 V in 0.1 V steps&lt;br/&gt;Buffer mode: 4 ch @ 400 MHz, 8 ch @ 200 MHz, 16 ch @ 100 MHz&lt;br/&gt;Stream mode: 3 ch @ 100 MHz, 6 ch @ 50 MHz, 12 ch @ 25 MHz, 16 ch @ 20 MHz</source><translation>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;阈值：0.0 - 5.0 V，步进 0.1 V&lt;br/&gt;Buffer 模式：4 通道 @ 400 MHz，8 通道 @ 200 MHz，16 通道 @ 100 MHz&lt;br/&gt;Stream 模式：3 通道 @ 100 MHz，6 通道 @ 50 MHz，12 通道 @ 25 MHz，16 通道 @ 20 MHz</translation></message>
 </context>
 <context>

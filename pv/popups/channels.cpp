@@ -391,7 +391,8 @@ void Channels::init_dslogic_ui()
 		auto gvar = sr_dev->config_get(sigrok::ConfigKey::CONTINUOUS);
 		if (gvar.gobj())
 			stream = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(gvar).get();
-	} catch (sigrok::Error&) {
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to read operation mode, defaulting to Buffer Mode:") << e.what();
 	}
 	dslogic_operation_mode_->setCurrentIndex(stream ? 1 : 0);
 	form->addRow(tr("Operation Mode"), dslogic_operation_mode_);
@@ -413,7 +414,8 @@ void Channels::init_dslogic_ui()
 			g_variant_get(gvar.gobj(), "(dd)", &lo, &hi);
 			dslogic_threshold_->setValue(lo);
 		}
-	} catch (sigrok::Error&) {
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to read threshold level, using device default:") << e.what();
 	}
 	form->addRow(tr("Threshold Level"), dslogic_threshold_);
 
@@ -433,7 +435,8 @@ void Channels::init_dslogic_ui()
 		if (gvar.gobj())
 			dslogic_rle_->setChecked(
 				Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(gvar).get());
-	} catch (sigrok::Error&) {
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to read RLE setting, using device default:") << e.what();
 	}
 	form->addRow(dslogic_rle_);
 
@@ -451,7 +454,8 @@ void Channels::init_dslogic_ui()
 			try {
 				dev->config_set(sigrok::ConfigKey::CONTINUOUS,
 					Glib::Variant<bool>::create(index == 1));
-			} catch (sigrok::Error&) {
+			} catch (sigrok::Error &e) {
+				qWarning() << tr("Failed to set operation mode:") << e.what();
 			}
 			rebuild_dslogic_channel_radios();
 			apply_dslogic_channel_mode(0);
@@ -461,7 +465,8 @@ void Channels::init_dslogic_ui()
 		try {
 			dev->config_set(sigrok::ConfigKey::RLE,
 				Glib::Variant<bool>::create(enabled));
-		} catch (sigrok::Error&) {
+		} catch (sigrok::Error &e) {
+			qWarning() << tr("Failed to set RLE compress:") << e.what();
 		}
 		sample_count_limits_changed();
 	});
@@ -472,7 +477,8 @@ void Channels::init_dslogic_ui()
 		try {
 			dev->config_set(sigrok::ConfigKey::VOLTAGE_THRESHOLD,
 				Glib::VariantBase(gvar, false));
-		} catch (sigrok::Error&) {
+		} catch (sigrok::Error &e) {
+			qWarning() << tr("Failed to set threshold level:") << e.what();
 		}
 	});
 }
@@ -573,7 +579,8 @@ void Channels::apply_dslogic_channel_mode(int index)
 			Glib::Variant<bool>::create(stream));
 		dev->config_set(sigrok::ConfigKey::SAMPLERATE,
 			Glib::Variant<guint64>::create(mode.max_samplerate));
-	} catch (sigrok::Error&) {
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to apply channel mode (mode/samplerate):") << e.what();
 	}
 
 	session_.update_signals();
