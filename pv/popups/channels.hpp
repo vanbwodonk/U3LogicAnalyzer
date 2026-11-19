@@ -164,6 +164,7 @@ private:
 	map<QCheckBox*, shared_ptr<data::SignalBase>> checkbox_signal_map_;
 	map<shared_ptr<sigrok::ChannelGroup>, QLabel*> group_label_map_;
 	vector<shared_ptr<binding::Device>> group_bindings_;
+	shared_ptr<binding::Device> hardware_binding_;
 	QSignalMapper check_box_mapper_;
 
 	map<int, float> threshold_value_map_;

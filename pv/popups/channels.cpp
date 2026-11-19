@@ -253,6 +253,37 @@ void Channels::init_ui()
 		options_box->setLayout(options_layout);
 		options_layout->addRow(vbox_layout);
 		acquisition_layout_->addRow(options_box);
+	} else {
+		// Generic LA/scope configuration exposed by the sigrok driver.
+		// For DreamSourceLab devices this includes the voltage threshold
+		// (0.0 - 5.0 V in 0.1 V steps), buffer/stream mode, capture ratio,
+		// external clock and clock edge.
+		hardware_binding_ = make_shared<binding::Device>(
+			std::static_pointer_cast<sigrok::Configurable>(device));
+		if (!hardware_binding_->properties().empty()) {
+			QGroupBox* hardware_box =
+				new QGroupBox(tr("Hardware Configuration"), this);
+			QVBoxLayout* hardware_layout = new QVBoxLayout(hardware_box);
+			hardware_layout->setContentsMargins(0, 0, 0, 0);
+			hardware_layout->addWidget(hardware_binding_->get_property_form(
+				hardware_box, true));
+			acquisition_layout_->addRow(hardware_box);
+		}
+
+		const QString model = QString::fromStdString(device->model());
+		if (model.contains("DSLogic Plus", Qt::CaseInsensitive)) {
+			QLabel* specs = new QLabel(tr(
+				"<b>DSLogic Plus</b><br/>"
+				"Threshold: 0.0 - 5.0 V in 0.1 V steps<br/>"
+				"Buffer mode: 4 ch @ 400 MHz, 8 ch @ 200 MHz, 16 ch @ 100 MHz<br/>"
+				"Stream mode: 3 ch @ 100 MHz, 6 ch @ 50 MHz, "
+				"12 ch @ 25 MHz, 16 ch @ 20 MHz"), this);
+			specs->setWordWrap(true);
+			specs->setTextFormat(Qt::RichText);
+			specs->setTextInteractionFlags(Qt::TextSelectableByMouse);
+			specs->setStyleSheet("color: #9fa7b2; font-weight: 400;");
+			acquisition_layout_->addRow(specs);
+		}
 	}
 
 	for (auto& entry : device->channel_groups()) {
@@ -1069,6 +1100,9 @@ void Channels::on_channel_checked(QWidget* widget)
 void Channels::showEvent(QShowEvent* event)
 {
 	pv::widgets::Popup::showEvent(event);
+
+	if (hardware_binding_)
+		hardware_binding_->update_property_widgets();
 
 	const shared_ptr<sigrok::Device> device = session_.device()->device();
 	assert(device);

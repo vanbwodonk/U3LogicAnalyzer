@@ -441,7 +441,8 @@ namespace pv
 			// 	run_stop_button_->setText(tr("Start"));
 			// connect(run_stop_button_, SIGNAL(clicked()), this, SIGNAL(run_stop_button_clicked()));
 			action_device_options_->setText(tr("Device Options"));
-			action_channel_configuration_->setText(tr("Channel Configuration"));
+			action_device_options_->setIcon(QIcon(":/icons/device-settings.svg"));
+			action_channel_configuration_->setText(tr("Device Options"));
 			action_channel_configuration_->setIcon(QIcon(":/icons/device-settings.svg"));
 			connect(action_device_options_, &QAction::triggered, this, [this]() {
 				if (channels_) channels_->show_acquisition_tab();
@@ -451,7 +452,7 @@ namespace pv
 				if (channels_) channels_->show_channels_tab();
 				channels_button_ex_clicked();
 			});
-			channels_button_ex_->setDefaultAction(action_channel_configuration_);
+			channels_button_ex_->setDefaultAction(action_device_options_);
 			channels_button_ex_->setToolButtonStyle(Qt::ToolButtonIconOnly);
 			for (QToolButton *button : {open_button_, save_button_,
 					model_change_button_, run_stop_button_, channels_button_ex_,
@@ -2196,7 +2197,7 @@ namespace pv
 			action_update_->setText(tr("Firmware Update"));
 			action_user_guide_->setText(tr("User Guide"));
 			action_device_options_->setText(tr("Device Options"));
-			action_channel_configuration_->setText(tr("Channel Configuration"));
+			action_channel_configuration_->setText(tr("Device Options"));
 
 			if (menu_new_view_) {
 				for (QAction *action : menu_new_view_->actions()) {

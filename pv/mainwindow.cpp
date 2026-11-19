@@ -375,7 +375,6 @@ void MainWindow::setup_application_menu(MainBar *main_bar)
 	connect(action_refresh_devices_, &QAction::triggered, this, &MainWindow::refresh_devices_now);
 	menu_device_->addSeparator();
 	menu_device_->addAction(main_bar->action_device_options());
-	menu_device_->addAction(main_bar->action_channel_configuration());
 
 	menu_acquisition_ = bar->addMenu(tr("Acquisition"));
 	menu_acquisition_->addAction(main_bar->action_single());

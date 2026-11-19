@@ -620,6 +620,7 @@ Do you want to save the session?</source>
         <source>No Limit</source>
         <translation>没有限制</translation>
     </message>
+    <message><source>Stream mode (continuous capture)</source><translation>Stream 模式（连续采集）</translation></message>
 </context>
 <context>
     <name>pv::data::DecodeSignal</name>
@@ -1822,6 +1823,8 @@ PulseView可能需要重新启动才能正确显示。</translation>
     <message><source>Acquisition</source><translation>采集</translation></message>
     <message><source>Channels</source><translation>通道</translation></message>
     <message><source>Configuration</source><translation>配置</translation></message>
+    <message><source>Hardware Configuration</source><translation>硬件配置</translation></message>
+    <message><source>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;Threshold: 0.0 - 5.0 V in 0.1 V steps&lt;br/&gt;Buffer mode: 4 ch @ 400 MHz, 8 ch @ 200 MHz, 16 ch @ 100 MHz&lt;br/&gt;Stream mode: 3 ch @ 100 MHz, 6 ch @ 50 MHz, 12 ch @ 25 MHz, 16 ch @ 20 MHz</source><translation>&lt;b&gt;DSLogic Plus&lt;/b&gt;&lt;br/&gt;阈值：0.0 - 5.0 V，步进 0.1 V&lt;br/&gt;Buffer 模式：4 通道 @ 400 MHz，8 通道 @ 200 MHz，16 通道 @ 100 MHz&lt;br/&gt;Stream 模式：3 通道 @ 100 MHz，6 通道 @ 50 MHz，12 通道 @ 25 MHz，16 通道 @ 20 MHz</translation></message>
 </context>
 <context>
     <name>pv::prop::Bool</name>

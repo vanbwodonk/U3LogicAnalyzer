@@ -14,6 +14,8 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
 - **完整 libsigrok 驱动集**：FX2LAFW/Saleae Logic、DreamSourceLab、Hantek、
   串口万用表/电源、SCPI 仪器等
 - 内置 DreamSourceLab 固件（无需单独安装 DSView）
+- 硬件相关设备选项：阈值电压（DSLogic 0.0-5.0 V，0.1 V 步进）、
+  Stream/Buffer 模式、触发位置、外部时钟、时钟边沿
   - Windows：原厂 CH375 驱动模式（CH375DLL）
   - macOS / Linux：驱动内置 **libusb 传输层**，无需任何内核驱动（协议参考
     WCH 官方 CH37X_LINUX SDK）

@@ -108,6 +108,9 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - `pv/dialogs/iapdialog.*` — HID firmware upgrade (CH375 IAP is Windows-only);
   `pv/dialogs/decoder_channel_dialog.*` — decoder channel assignment.
 - `pv/devicepresence.*` — pure USB identity/snapshot-diff helpers.
+- `pv/popups/channels.*` — the Device Options dialog (Acquisition/Channels
+  tabs). Non-WCH devices get a generic `binding::Device` hardware form from
+  libsigrok config keys; the DSLogic threshold is exposed as a 0.1 V slider.
 - `libsigrok/src/hardware/wch-ch32h417/` — `api.c` driver
   lifecycle/configuration, `protocol.c` command protocol,
   `ch375_wrapper.c` transport (CH375DLL on Windows, libusb elsewhere).

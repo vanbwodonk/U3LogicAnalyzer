@@ -15,6 +15,8 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
   DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
 - Bundled DreamSourceLab firmware (no separate DSView installation needed)
+- Hardware-aware Device Options: voltage threshold (DSLogic: 0.0-5.0 V in
+  0.1 V steps), stream/buffer mode, capture ratio, external clock and clock edge
   - Windows: CH375 driver mode (CH375DLL)
   - macOS / Linux: libusb transport inside the driver, no kernel module
     required (protocol based on WCH's official CH37X_LINUX SDK)

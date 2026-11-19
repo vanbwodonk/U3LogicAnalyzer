@@ -20,6 +20,7 @@
  */
 
 #include <cstdint>
+#include <memory>
 
 #include <QDebug>
 
@@ -59,6 +60,10 @@ Device::Device(shared_ptr<sigrok::Configurable> configurable) :
 
 	auto keys = configurable->config_keys();
 
+	bool dslogic = false;
+	if (auto dev = std::dynamic_pointer_cast<sigrok::Device>(configurable))
+		dslogic = dev->vendor() == "DreamSourceLab";
+
 	for (auto key : keys) {
 
 		string descr_str;
@@ -67,7 +72,12 @@ Device::Device(shared_ptr<sigrok::Configurable> configurable) :
 		} catch (Error& e) {
 			descr_str = key->name();
 		}
-		const QString descr = QString::fromStdString(descr_str);
+		QString descr = QString::fromStdString(descr_str);
+
+		// DSLogic names the two acquisition modes Buffer and Stream; the
+		// libsigrok key is CONTINUOUS, so present a clearer label.
+		if (dslogic && key->id() == SR_CONF_CONTINUOUS)
+			descr = tr("Stream mode (continuous capture)");
 
 		auto capabilities = configurable->config_capabilities(key);
 
@@ -224,6 +234,8 @@ QString Device::print_voltage_threshold(Glib::VariantBase gvar)
 {
 	gdouble lo, hi;
 	g_variant_get(gvar.gobj(), "(dd)", &lo, &hi);
+	if (lo == hi)
+		return QString("%1 V").arg(lo, 0, 'f', 1);
 	return QString("L<%1V H>%2V").arg(lo, 0, 'f', 1).arg(hi, 0, 'f', 1);
 }
 
