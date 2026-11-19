@@ -14,6 +14,7 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - CH32H417 (USB 3.0, up to 200 MHz sampling) and CH569 hot-plug detection
 - Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
   DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
+- Bundled DreamSourceLab firmware (no separate DSView installation needed)
   - Windows: CH375 driver mode (CH375DLL)
   - macOS / Linux: libusb transport inside the driver, no kernel module
     required (protocol based on WCH's official CH37X_LINUX SDK)
@@ -151,19 +152,14 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
   analyzers also need the `sigrok-firmware-fx2lafw` firmware files installed
   (or `SIGROK_FIRMWARE_DIR` set).
-- DreamSourceLab DSLogic not detected, or firmware/FPGA upload fails? The
-  driver needs DreamSourceLab firmware files. If DSView is installed,
-  `./build_linux.sh` copies the FPGA bitstream automatically from
-  `/usr/share/DSView/res`. To install manually (also for the AUR package):
+- DreamSourceLab DSLogic not detected, or firmware/FPGA upload fails? All
+  supported DreamSourceLab firmware is bundled in
+  [`firmware/dreamsourcelab/`](firmware/dreamsourcelab) and is installed to
+  `share/sigrok-firmware` by the build. DSView is **not** required. If you run
+  a build from an unusual location, point libsigrok at the bundled directory:
 
   ```bash
-  mkdir -p ~/.local/share/sigrok-firmware
-  cp /usr/share/DSView/res/DSLogicPlus.bin \
-     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fpga.fw
-  # DSLogicPlus.fw is missing from some distro packages; DSLogic.fw is a
-  # fallback for bootloader recovery:
-  cp /usr/share/DSView/res/DSLogic.fw \
-     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fx2.fw
+  export SIGROK_FIRMWARE_DIR="$PWD/firmware/dreamsourcelab"
   ```
 
 - App fails to launch after packaging? Make sure the qt@5 `macdeployqt` is

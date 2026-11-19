@@ -72,3 +72,8 @@ test/cmake_install.cmake
 
 # Local Arch Linux packaging
 /AUR/.SRCINFO
+/AUR/firmware/
+/AUR/src/
+/AUR/pkg/
+/AUR/*.pkg.tar.zst
+/AUR/src/

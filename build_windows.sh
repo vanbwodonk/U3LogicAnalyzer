@@ -148,12 +148,15 @@ for dll in \
 done
 
 cp -R "$PREFIX/share/libsigrokdecode/decoders" "$PVDIR/decoders"
+mkdir -p "$PVDIR/sigrok-firmware"
+cp -f "$SCRIPT_DIR"/firmware/dreamsourcelab/*.fw "$PVDIR/sigrok-firmware"/
 
 cat > "$PVDIR/run.bat" << 'RBEOF'
 @echo off
 cd /d "%~dp0"
 set "PATH=%~dp0;%PATH%"
 set "SIGROKDECODE_DIR=%~dp0decoders"
+set "SIGROK_FIRMWARE_DIR=%~dp0sigrok-firmware"
 start "" "LogicAnalyzer.exe"
 RBEOF
 

@@ -165,26 +165,11 @@ cmake -S "$ROOT_DIR/libsigrok" -B "$BUILD_DIR/libsigrok_build" \
 cmake --build "$BUILD_DIR/libsigrok_build" -j "$JOBS"
 cmake --install "$BUILD_DIR/libsigrok_build"
 
-# Optional: make DreamSourceLab DSLogic firmware available to libsigrok.
-# DSView (if installed) ships the FX2 firmware and FPGA bitstream.
-DSVIEW_RES="${DSVIEW_RES:-/usr/share/DSView/res}"
+# Make the bundled DreamSourceLab firmware available to libsigrok.
 FW_DIR="$PREFIX/share/sigrok-firmware"
-if [[ -d "$DSVIEW_RES" ]]; then
-    mkdir -p "$FW_DIR"
-    DSLOGIC_FX2="$DSVIEW_RES/DSLogicPlus.fw"
-    [[ -f "$DSLOGIC_FX2" ]] || DSLOGIC_FX2="$DSVIEW_RES/DSLogic.fw"
-    if [[ -f "$DSLOGIC_FX2" ]]; then
-        cp -f "$DSLOGIC_FX2" \
-            "$FW_DIR/dreamsourcelab-dslogic-plus-fx2.fw"
-    fi
-    if [[ -f "$DSVIEW_RES/DSLogicPlus.bin" ]]; then
-        cp -f "$DSVIEW_RES/DSLogicPlus.bin" \
-            "$FW_DIR/dreamsourcelab-dslogic-plus-fpga.fw"
-    fi
-    echo "[ok] DreamSourceLab firmware copied from $DSVIEW_RES"
-else
-    echo "[warning] $DSVIEW_RES not found; DSLogic firmware not installed"
-fi
+mkdir -p "$FW_DIR"
+cp -f "$ROOT_DIR"/firmware/dreamsourcelab/*.fw "$FW_DIR"/
+echo "[ok] DreamSourceLab firmware installed from firmware/dreamsourcelab"
 
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 export CMAKE_PREFIX_PATH="$PREFIX${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"

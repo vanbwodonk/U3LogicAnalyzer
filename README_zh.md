@@ -13,6 +13,7 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
 - **硬件支持**：CH32H417（USB3.0，最高 200MHz 采样）、CH569 热插拔检测
 - **完整 libsigrok 驱动集**：FX2LAFW/Saleae Logic、DreamSourceLab、Hantek、
   串口万用表/电源、SCPI 仪器等
+- 内置 DreamSourceLab 固件（无需单独安装 DSView）
   - Windows：原厂 CH375 驱动模式（CH375DLL）
   - macOS / Linux：驱动内置 **libusb 传输层**，无需任何内核驱动（协议参考
     WCH 官方 CH37X_LINUX SDK）
@@ -186,18 +187,14 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 
 ## 常见问题
 
-- DreamSourceLab DSLogic 无法识别，或固件/FPGA 上传失败？驱动需要
-  DreamSourceLab 的固件文件。若系统已安装 DSView，`./build_linux.sh` 会
-  自动从 `/usr/share/DSView/res` 复制 FPGA 位流。手动安装（AUR 包同样
-  适用）：
+- DreamSourceLab DSLogic 无法识别，或固件/FPGA 上传失败？所有受支持的
+  DreamSourceLab 固件已随仓库放在
+  [`firmware/dreamsourcelab/`](firmware/dreamsourcelab)，构建时会安装到
+  `share/sigrok-firmware`，不再需要 DSView。如果从特殊位置运行构建，
+  可显式指定：
 
   ```bash
-  mkdir -p ~/.local/share/sigrok-firmware
-  cp /usr/share/DSView/res/DSLogicPlus.bin \
-     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fpga.fw
-  # 部分发行版的 DSView 包缺少 DSLogicPlus.fw，可用 DSLogic.fw 兜底
-  cp /usr/share/DSView/res/DSLogic.fw \
-     ~/.local/share/sigrok-firmware/dreamsourcelab-dslogic-plus-fx2.fw
+  export SIGROK_FIRMWARE_DIR="$PWD/firmware/dreamsourcelab"
   ```
 
 - **解码器菜单是空的？** 现在已自动发现解码器；若仍为空，检查

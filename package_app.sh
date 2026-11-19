@@ -60,6 +60,12 @@ echo "==> 复制协议解码器"
 cp -R "$PREFIX/share/libsigrokdecode/decoders" "$RESOURCES/decoders"
 echo "    $(ls "$RESOURCES/decoders" | wc -l | tr -d ' ') 个解码器"
 
+echo "==> 复制 DreamSourceLab 固件"
+if [ -d "$PREFIX/share/sigrok-firmware" ]; then
+	cp -R "$PREFIX/share/sigrok-firmware" "$RESOURCES/sigrok-firmware"
+	echo "    $(ls "$RESOURCES/sigrok-firmware" | wc -l | tr -d ' ') 个固件文件"
+fi
+
 echo "==> 生成应用图标"
 ICONSET="$BUILD_DIR/AppIcon.iconset"
 rm -rf "$ICONSET"

@@ -19,3 +19,9 @@ Because the patched sigrok libraries are installed into `/usr/lib`, this
 package conflicts with the distribution's `libsigrok` / `libsigrokdecode`
 packages. Install `sigrok-firmware-fx2lafw` separately if you use FX2LAFW /
 Saleae Logic hardware.
+
+## DreamSourceLab DSLogic firmware
+
+DSView is **not** required. All supported DreamSourceLab firmware is bundled
+in the project under `firmware/dreamsourcelab/` and is installed to
+`/usr/share/sigrok-firmware` by the application CMake install rules.

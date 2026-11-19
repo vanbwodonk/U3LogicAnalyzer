@@ -336,6 +336,25 @@ int main(int argc, char *argv[])
 
 	pv::logging.init();
 
+	// Locate bundled DreamSourceLab firmware without relying on DSView or
+	// on the user exporting SIGROK_FIRMWARE_DIR manually.
+	if (qgetenv("SIGROK_FIRMWARE_DIR").isEmpty()) {
+		const QString app_dir = QCoreApplication::applicationDirPath();
+		const QStringList fw_candidates = {
+			app_dir + "/sigrok-firmware",
+			app_dir + "/../Resources/sigrok-firmware",
+			app_dir + "/../share/sigrok-firmware",
+			app_dir + "/../../install/share/sigrok-firmware",
+			app_dir + "/../../../firmware/dreamsourcelab",
+		};
+		for (const QString &cand : fw_candidates) {
+			if (QFileInfo::exists(cand)) {
+				qputenv("SIGROK_FIRMWARE_DIR", cand.toLocal8Bit());
+				break;
+			}
+		}
+	}
+
 	// Initialise libsigrok
 	context = sigrok::Context::create();
 	pv::Session::sr_context = context;

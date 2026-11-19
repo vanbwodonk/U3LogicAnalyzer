@@ -14,7 +14,8 @@ vendored in-tree:
   etc.) plus the U3 `wch-ch32h417` driver.
 - `libsigrokdecode/` — libsigrokdecode `0.6.0` with 130 Python decoders.
 - `firmware/` — MounRiver Studio projects (CH32H417 APP/IAP, V3F/V5F) and
-  prebuilt firmware images. This is **not** part of the CMake build.
+  prebuilt images; the `firmware/dreamsourcelab/` subtree contains the
+  bundled DreamSourceLab firmware and is installed by CMake.
 - `build_macos.sh`, `build_linux.sh`, `build_windows.sh`, `package_app.sh` —
   supported build and packaging entry points. `build_linux.sh` is the
   Linux-only helper (release/debug, separate `build/linux` tree).
@@ -172,9 +173,11 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - The DreamSourceLab DSLogic driver includes the API v2 support from libsigrok
   PR #170 (DSLogic Plus `2a0e:0020`, U3Pro16 `2a0e:002a`). Scan must tolerate
   unreadable USB string descriptors and `dslogic_dev_open()` falls back to
-  API v2 for those models if strings are unavailable. DSLogic firmware files
-  are not vendored: `build_linux.sh` copies the FPGA/ FX2 files from
-  `/usr/share/DSView/res` when DSView is installed (see README FAQ).
+  API v2 for those models if strings are unavailable. The firmware files are
+  vendored under `firmware/dreamsourcelab/` (DreamSourceLab MIT-style
+  license), installed to `share/sigrok-firmware` by the top-level CMake
+  install rules and by `build_linux.sh`. Do not reintroduce a build/runtime
+  dependency on DSView.
 - The acquisition path is sensitive to 8- vs 16-channel packing:
   `Segment::unit_size_temp` is `8 / channel_num`, and channel-bit offsets /
   `channel_switch_2` depend on it. A divide-by-zero/crash in the 16-channel

@@ -737,6 +737,17 @@ endif()
 # Install the executable.
 install(TARGETS ${PROJECT_NAME} DESTINATION bin/)
 
+# Install bundled DreamSourceLab firmware. Keeping these in-tree means the
+# application works without a separate DSView installation.
+install(DIRECTORY firmware/dreamsourcelab/
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/sigrok-firmware
+    FILES_MATCHING PATTERN "*.fw"
+)
+install(FILES firmware/dreamsourcelab/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/U3LogicAnalyzer
+    RENAME dreamsourcelab-firmware-LICENSE
+)
+
 # Install the manpage.
 install(FILES doc/pulseview.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 
