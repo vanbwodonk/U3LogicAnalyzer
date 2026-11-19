@@ -116,7 +116,7 @@ public:
 	};
 
 	static const QColor AnalogSignalColors[8];
-	static const QColor LogicSignalColors[4];
+	static const QColor LogicSignalColors[16];
 	int height_;
 
 	atomic<uint64_t> start_decode_pos_;
