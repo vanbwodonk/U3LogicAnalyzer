@@ -558,19 +558,6 @@ static int config_set(uint32_t key, GVariant *data,
 	return SR_OK;
 }
 
-static unsigned int enabled_channel_count(const struct sr_dev_inst *sdi)
-{
-	unsigned int count = 0;
-
-	for (GSList *l = sdi->channels; l; l = l->next) {
-		const struct sr_channel *const channel = l->data;
-		if (channel->enabled)
-			count++;
-	}
-
-	return count;
-}
-
 static int config_list(uint32_t key, GVariant **data,
 	const struct sr_dev_inst *sdi, const struct sr_channel_group *cg)
 {

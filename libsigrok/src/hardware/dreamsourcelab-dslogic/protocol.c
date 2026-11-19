@@ -700,7 +700,7 @@ SR_PRIV int dslogic_fpga_firmware_upload(const struct sr_dev_inst *sdi)
 	return result;
 }
 
-static unsigned int enabled_channel_count(const struct sr_dev_inst *sdi)
+unsigned int enabled_channel_count(const struct sr_dev_inst *sdi)
 {
 	unsigned int count = 0;
 	for (const GSList *l = sdi->channels; l; l = l->next) {

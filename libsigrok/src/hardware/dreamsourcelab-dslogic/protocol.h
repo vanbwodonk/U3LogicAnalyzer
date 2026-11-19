@@ -179,5 +179,6 @@ SR_PRIV int dslogic_dev_open(struct sr_dev_inst *sdi, struct sr_dev_driver *di);
 SR_PRIV struct dev_context *dslogic_dev_new(void);
 SR_PRIV int dslogic_acquisition_start(const struct sr_dev_inst *sdi);
 SR_PRIV int dslogic_acquisition_stop(struct sr_dev_inst *sdi);
+SR_PRIV unsigned int enabled_channel_count(const struct sr_dev_inst *sdi);
 
 #endif
