@@ -852,7 +852,10 @@ namespace pv
 			}
 
 			// static uint64_t sample_count = ((double)sample_count_.get_current_data(sample_count_.get_current_index())) / 10000.00 * (double)sample_rate_.get_current_data(sample_rate_.get_current_index());
-			static uint64_t sample_count = 0;
+			// Per-device sample count state; reset in on_device_changed() so a
+			// previously selected analyzer cannot leak its limit into the new
+			// device's sample-count list.
+			uint64_t &sample_count = selected_sample_count_;
 			uint64_t min_sample_count = 0;
 			uint64_t max_sample_count = MaxSampleCount;
 			bool default_count_set = false;
@@ -2016,6 +2019,10 @@ namespace pv
 
 		void MainBar::on_device_changed()
 		{
+			// Do not carry a previous analyzer's sample count into the new
+			// device's sample-count list.
+			selected_sample_count_ = 0;
+
 			update_device_list();
 			update_device_status_icon();
 			if (device_selector_.selected_device())

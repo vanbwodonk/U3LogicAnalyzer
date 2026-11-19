@@ -284,6 +284,7 @@ private:
 	bool is_count_setting_default_;
 	bool is_rate_setting_default_;
 	uint64_t sample_count_value_ = 12500;
+	uint64_t selected_sample_count_ = 0;
 	uint64_t sample_rate_value_ = SR_KHZ(500);
 	uint64_t dslogic_max_samplerate_ = 0;
 	uint16_t channel_number_;
