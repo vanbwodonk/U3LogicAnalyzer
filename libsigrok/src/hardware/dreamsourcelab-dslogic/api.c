@@ -26,33 +26,39 @@ static const struct dslogic_profile supported_device[] = {
 	/* DreamSourceLab DSLogic */
 	{ 0x2a0e, 0x0001, "DreamSourceLab", "DSLogic", NULL,
 		"dreamsourcelab-dslogic-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 100,
 		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSCope */
 	{ 0x2a0e, 0x0002, "DreamSourceLab", "DSCope", NULL,
 		"dreamsourcelab-dscope-fx2.fw",
-		0, "DreamSourceLab", "DSCope", 256 * 1024 * 1024, 100,
+		0, "DreamSourceLab", "DSCope", 256 * 1024 * 1024,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 100,
 		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Pro */
 	{ 0x2a0e, 0x0003, "DreamSourceLab", "DSLogic Pro", NULL,
 		"dreamsourcelab-dslogic-pro-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 100,
 		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Plus */
 	{ 0x2a0e, 0x0020, "DreamSourceLab", "DSLogic Plus", NULL,
 		"dreamsourcelab-dslogic-plus-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024, 100,
+		0, "DreamSourceLab", "DSLogic", 256 * 1024 * 1024,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 100,
 		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic Basic */
 	{ 0x2a0e, 0x0021, "DreamSourceLab", "DSLogic Basic", NULL,
 		"dreamsourcelab-dslogic-basic-fx2.fw",
-		0, "DreamSourceLab", "DSLogic", 256 * 1024, 100,
+		0, "DreamSourceLab", "DSLogic", 256 * 1024,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 100,
 		512, SR_MHZ(100), SR_MHZ(200), SR_MHZ(400), 1},
 	/* DreamSourceLab DSLogic U3Pro16 */
 	{ 0x2a0e, 0x002a, "DreamSourceLab", "DSLogic U3Pro16", NULL,
 		"dreamsourcelab-dslogic-basic-fx2.fw",
 		DSLOGIC_CAPS_ADF4360 | DSLOGIC_CAPS_USB30, "DreamSourceLab", "DSLogic",
-		2ULL * 1024ULL * 1024ULL * 1024ULL, 40,
+		2ULL * 1024ULL * 1024ULL * 1024ULL,
+		DSLOGIC_RLE_DEPTH, DSLOGIC_STREAM_DEPTH, 40,
 		1024, SR_MHZ(500), SR_MHZ(500), SR_GHZ(1), 5},
 
 	ALL_ZERO
@@ -577,9 +583,9 @@ static int config_list(uint32_t key, GVariant **data,
 				channels = 1;
 
 			if (devc->continuous_mode)
-				max_samples = 16ULL * 1024 * 1024 * 1024;
+				max_samples = devc->profile->stream_depth;
 			else if (devc->rle_mode)
-				max_samples = (16ULL * 1024 * 1024 * 1024) / channels;
+				max_samples = devc->profile->rle_depth / channels;
 			else
 				max_samples = devc->profile->mem_depth / channels;
 

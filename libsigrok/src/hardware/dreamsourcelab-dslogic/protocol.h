@@ -38,6 +38,12 @@
 #define NUM_SIMUL_TRANSFERS	64
 #define MAX_EMPTY_TRANSFERS	(NUM_SIMUL_TRANSFERS * 2)
 
+/* Default stream/RLE depth in samples, matching the DreamSourceLab
+ * advertised 16 G depths. Used as the per-profile defaults so models
+ * with different depths can override them in the profile table. */
+#define DSLOGIC_STREAM_DEPTH	(16ULL * 1024 * 1024 * 1024)
+#define DSLOGIC_RLE_DEPTH	(16ULL * 1024 * 1024 * 1024)
+
 #define NUM_CHANNELS		16
 #define NUM_TRIGGER_STAGES	16
 
@@ -119,6 +125,11 @@ struct dslogic_profile {
 
 	/* Memory depth in bits. */
 	uint64_t mem_depth;
+	/* RLE buffer depth in samples, total (divided by the enabled channel
+	 * count when reporting limits). */
+	uint64_t rle_depth;
+	/* Stream mode depth in samples. */
+	uint64_t stream_depth;
 	uint32_t usb_buffer_duration_ms;
 	uint32_t block_size;
 	uint64_t max_samplerate;
