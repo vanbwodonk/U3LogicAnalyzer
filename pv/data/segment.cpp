@@ -22,6 +22,7 @@
 
 #include "segment.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -35,6 +36,34 @@ using std::recursive_mutex;
 
 namespace pv {
 namespace data {
+
+namespace {
+
+// Compare a chunk against a constant byte value in page-sized blocks. This is
+// used to detect idle all-zero/all-one chunks while streaming, where memcmp()
+// is considerably faster than a word-at-a-time C loop.
+bool chunk_is_constant(const uint8_t *data, uint64_t size, uint8_t value)
+{
+	static constexpr uint64_t PageSize = 4096;
+	static const std::array<uint8_t, PageSize> zeros{};
+	static const std::array<uint8_t, PageSize> ones = [] {
+		std::array<uint8_t, PageSize> a;
+		a.fill(0xFF);
+		return a;
+	}();
+	const uint8_t *const pattern = value ? ones.data() : zeros.data();
+
+	while (size >= PageSize) {
+		if (memcmp(data, pattern, PageSize) != 0)
+			return false;
+		data += PageSize;
+		size -= PageSize;
+	}
+
+	return size == 0 || memcmp(data, pattern, size) == 0;
+}
+
+} // namespace
 
 const uint64_t Segment::MaxChunkSize = 2 * 1024 * 1024;  /* 2MiB */
 
@@ -145,41 +174,22 @@ bool Segment::is_complete() const
 
 ChunkType Segment::check_chunk_type(const uint8_t* chunk, uint64_t size) const
 {
+	if (size == 0)
+		return ChunkType::ALL_ZERO;
+
 	const uint64_t* ptr = (const uint64_t*)chunk;
-	uint64_t num_elements = size / sizeof(uint64_t);
+	const bool maybe_zero = (ptr[0] == 0);
+	const bool maybe_one = (ptr[0] == UINT64_MAX);
 
-	if (num_elements == 0) {
-		if (size == 0) return ChunkType::ALL_ZERO;
-
-		bool all_zero = true;
-		bool all_one = true;
-		for (uint64_t i = 0; i < size; i++) {
-			if (chunk[i] != 0) all_zero = false;
-			if (chunk[i] != 0xFF) all_one = false;
-		}
-		if (all_zero) return ChunkType::ALL_ZERO;
-		if (all_one) return ChunkType::ALL_ONE;
+	if (!maybe_zero && !maybe_one)
 		return ChunkType::NORMAL;
-	}
 
-	uint64_t first = ptr[0];
-	bool maybe_zero = (first == 0);
-	bool maybe_one = (first == UINT64_MAX);
+	if (maybe_zero && chunk_is_constant(chunk, size, 0))
+		return ChunkType::ALL_ZERO;
+	if (maybe_one && chunk_is_constant(chunk, size, 0xFF))
+		return ChunkType::ALL_ONE;
 
-	if (!maybe_zero && !maybe_one) return ChunkType::NORMAL;
-
-	for (uint64_t i = 1; i < num_elements; i++) {
-		if (maybe_zero && ptr[i] != 0) return ChunkType::NORMAL;
-		if (maybe_one && ptr[i] != UINT64_MAX) return ChunkType::NORMAL;
-	}
-
-	const uint8_t* tail = (const uint8_t*)(ptr + num_elements);
-	for (uint64_t i = 0; i < (size % sizeof(uint64_t)); i++) {
-		if (maybe_zero && tail[i] != 0) return ChunkType::NORMAL;
-		if (maybe_one && tail[i] != 0xFF) return ChunkType::NORMAL;
-	}
-
-	return maybe_zero ? ChunkType::ALL_ZERO : ChunkType::ALL_ONE;
+	return ChunkType::NORMAL;
 }
 
 bool Segment::compare_chunks(const uint8_t* chunk1, const uint8_t* chunk2, uint64_t size) const
