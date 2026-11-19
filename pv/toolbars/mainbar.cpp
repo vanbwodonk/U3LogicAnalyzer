@@ -160,6 +160,7 @@ namespace pv
 																							device_status_icon_(new QToolButton()),
 																							refresh_button_(new QToolButton(this)),
 																							disconnect_button_(new QToolButton(this)),
+																							trigger_button_(new QToolButton(this)),
 																							device_selector_(parent, session.device_manager_ptr(), action_connect_),
 																							// configure_button_(this),
 																							// configure_button_action_(nullptr),
@@ -207,6 +208,15 @@ namespace pv
 			disconnect_button_->setEnabled(false);
 			connect(disconnect_button_, &QToolButton::clicked,
 				this, &MainBar::disconnect_device_requested);
+
+			trigger_button_->setIcon(QIcon(":/icons/trigger-change.svg"));
+			trigger_button_->setIconSize(QSize(18, 18));
+			trigger_button_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+			trigger_button_->setToolTip(tr("Trigger Options (Ctrl+T)"));
+			trigger_button_->setFixedSize(32, 32);
+			trigger_button_->setEnabled(false);
+			connect(trigger_button_, &QToolButton::clicked,
+				this, &MainBar::trigger_option_requested);
 
 			setObjectName(QString::fromUtf8("MainBar"));
 			sample_count_.set_prefix_text(tr("Duration"));
@@ -600,6 +610,7 @@ namespace pv
 			action_device_options_->setEnabled(has_device);
 			action_channel_configuration_->setEnabled(has_device);
 			disconnect_button_->setEnabled(has_device);
+			trigger_button_->setEnabled(has_device);
 			update_device_config_widgets();
 			// DeviceToolButton::set_device_list() resets the label to the
 			// generic display name. Restore the interface/USB status suffix
@@ -615,6 +626,7 @@ namespace pv
 			device_selector_.setEnabled(ui_enabled);
 			refresh_button_->setEnabled(ui_enabled);
 			disconnect_button_->setEnabled(ui_enabled && has_device);
+			trigger_button_->setEnabled(ui_enabled && has_device);
 			// configure_button_.setEnabled(ui_enabled);
 			// channels_button_.setEnabled(ui_enabled);
 			channels_button_ex_->setEnabled(ui_enabled && has_device);
@@ -2223,6 +2235,7 @@ namespace pv
 
 			if (channels_button_ex_)
 				addWidget(channels_button_ex_);
+			addWidget(trigger_button_);
 			addWidget(&sample_count_);
 			addWidget(&sample_rate_);
 			addWidget(model_change_button_);
@@ -2335,6 +2348,7 @@ namespace pv
 			action_channel_configuration_->setText(tr("Device Options"));
 			refresh_button_->setToolTip(tr("Scan for newly connected USB devices"));
 			disconnect_button_->setToolTip(tr("Disconnect the selected device"));
+			trigger_button_->setToolTip(tr("Trigger Options (Ctrl+T)"));
 
 			if (menu_new_view_) {
 				for (QAction *action : menu_new_view_->actions()) {

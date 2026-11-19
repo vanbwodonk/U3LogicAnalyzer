@@ -328,6 +328,8 @@ shared_ptr<views::ViewBase> MainWindow::add_view(views::ViewType type,
 				this, &MainWindow::refresh_devices_now);
 			connect(main_bar.get(), &MainBar::disconnect_device_requested,
 				this, &MainWindow::disconnect_current_device);
+			connect(main_bar.get(), &MainBar::trigger_option_requested,
+				this, &MainWindow::show_trigger_option);
 
 			main_bar->action_view_show_cursors()->setChecked(tv->cursors_shown());
 			session.set_main_bar(main_bar);
@@ -381,6 +383,10 @@ void MainWindow::setup_application_menu(MainBar *main_bar)
 	menu_device_->addSeparator();
 	menu_device_->addAction(main_bar->action_device_options());
 	action_trigger_option_ = menu_device_->addAction(tr("Trigger Option"));
+	action_trigger_option_->setIcon(QIcon(":/icons/trigger-change.svg"));
+	action_trigger_option_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_T));
+	action_trigger_option_->setStatusTip(
+		tr("Configure simple or advanced trigger settings"));
 	connect(action_trigger_option_, &QAction::triggered,
 		this, &MainWindow::show_trigger_option);
 
