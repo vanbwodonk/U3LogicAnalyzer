@@ -69,6 +69,33 @@ using namespace pv::util;
 namespace pv {
 namespace popups {
 
+namespace {
+
+struct DslogicChannelMode {
+	uint16_t channels;
+	uint64_t max_samplerate;
+};
+
+const DslogicChannelMode dslogic_buffer_modes[] = {
+	{16, SR_MHZ(100)},
+	{8, SR_MHZ(200)},
+	{4, SR_MHZ(400)},
+};
+
+const DslogicChannelMode dslogic_stream_modes[] = {
+	{16, SR_MHZ(20)},
+	{12, SR_MHZ(25)},
+	{6, SR_MHZ(50)},
+	{3, SR_MHZ(100)},
+};
+
+const int dslogic_buffer_mode_count =
+	(int)(sizeof(dslogic_buffer_modes) / sizeof(dslogic_buffer_modes[0]));
+const int dslogic_stream_mode_count =
+	(int)(sizeof(dslogic_stream_modes) / sizeof(dslogic_stream_modes[0]));
+
+} // namespace
+
 Channels::Channels(Session &session, QString device_name, QWidget *parent) :
 	Popup(parent),
 	session_(session),
@@ -497,23 +524,10 @@ void Channels::rebuild_dslogic_channel_radios()
 	const bool stream = dslogic_operation_mode_ &&
 		dslogic_operation_mode_->currentIndex() == 1;
 
-	struct Mode {
-		uint16_t channels;
-		uint64_t max_samplerate;
-	};
-	static const Mode buffer_modes[] = {
-		{16, SR_MHZ(100)},
-		{8, SR_MHZ(200)},
-		{4, SR_MHZ(400)},
-	};
-	static const Mode stream_modes[] = {
-		{16, SR_MHZ(20)},
-		{12, SR_MHZ(25)},
-		{6, SR_MHZ(50)},
-		{3, SR_MHZ(100)},
-	};
-	const Mode* modes = stream ? stream_modes : buffer_modes;
-	const int count = stream ? 4 : 3;
+	const DslogicChannelMode* modes =
+		stream ? dslogic_stream_modes : dslogic_buffer_modes;
+	const int count =
+		stream ? dslogic_stream_mode_count : dslogic_buffer_mode_count;
 
 	for (int i = 0; i < count; ++i) {
 		QRadioButton* radio = new QRadioButton(
@@ -539,27 +553,14 @@ void Channels::apply_dslogic_channel_mode(int index)
 	const bool stream = dslogic_operation_mode_ &&
 		dslogic_operation_mode_->currentIndex() == 1;
 
-	struct Mode {
-		uint16_t channels;
-		uint64_t max_samplerate;
-	};
-	static const Mode buffer_modes[] = {
-		{16, SR_MHZ(100)},
-		{8, SR_MHZ(200)},
-		{4, SR_MHZ(400)},
-	};
-	static const Mode stream_modes[] = {
-		{16, SR_MHZ(20)},
-		{12, SR_MHZ(25)},
-		{6, SR_MHZ(50)},
-		{3, SR_MHZ(100)},
-	};
-	const Mode* modes = stream ? stream_modes : buffer_modes;
-	const int count = stream ? 4 : 3;
+	const DslogicChannelMode* modes =
+		stream ? dslogic_stream_modes : dslogic_buffer_modes;
+	const int count =
+		stream ? dslogic_stream_mode_count : dslogic_buffer_mode_count;
 	if (index < 0 || index >= count)
 		return;
 
-	const Mode& mode = modes[index];
+	const DslogicChannelMode& mode = modes[index];
 	channel_max_ = mode.channels;
 
 	updating_channels_ = true;
