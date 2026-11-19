@@ -68,20 +68,6 @@ pkgver() {
     fi
 }
 
-prepare() {
-    cd "$srcdir/$pkgname"
-
-    # Some in-tree headers use extra "../" components that only resolve when
-    # the CMake install prefix lives inside the source tree. Normalize them so
-    # that the staged-prefix build used by this package works as well.
-    sed -i \
-        's|#include "\.\./\.\./\.\./libsigrok/src/hardware/wch-ch32h417/ch375_wrapper.h"|#include "../../libsigrok/src/hardware/wch-ch32h417/ch375_wrapper.h"|' \
-        pv/toolbars/mainbar.hpp
-    sed -i \
-        's|#include "\.\./\.\./\.\./libsigrokdecode/libsigrokdecode.h"|#include <libsigrokdecode/libsigrokdecode.h>|' \
-        pv/data/decodesignal.hpp
-}
-
 build() {
     cd "$srcdir/$pkgname"
 
