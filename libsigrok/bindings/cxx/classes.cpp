@@ -639,6 +639,18 @@ string Device::connection_id() const
 	return valid_string(sr_dev_inst_connid_get(_structure));
 }
 
+int Device::instance_type() const
+{
+	return sr_dev_inst_type_get(_structure);
+}
+
+int Device::usb_version() const
+{
+	int version = 0;
+	sr_dev_inst_usb_version_get(_structure, &version);
+	return version;
+}
+
 vector<shared_ptr<Channel>> Device::channels()
 {
 	vector<shared_ptr<Channel>> result;

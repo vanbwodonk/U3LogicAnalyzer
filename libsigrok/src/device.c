@@ -939,6 +939,89 @@ SR_API const char *sr_dev_inst_connid_get(const struct sr_dev_inst *sdi)
 }
 
 /**
+ * Queries a device instance's type (SR_INST_USB, SR_INST_SERIAL, ...).
+ *
+ * @param sdi Device instance to use. Must not be NULL.
+ *
+ * @return The instance type, or SR_ERR_ARG on invalid input.
+ */
+SR_API int sr_dev_inst_type_get(const struct sr_dev_inst *sdi)
+{
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	return sdi->inst_type;
+}
+
+/**
+ * Queries the USB major version (2 for USB 2.x, 3 for USB 3.x) of a device.
+ *
+ * @param sdi Device instance to use. Must not be NULL.
+ * @param version Pointer to store the major USB version in. 0 is stored when
+ *                the version cannot be determined.
+ *
+ * @return SR_OK on success, SR_ERR_ARG for non-USB/invalid devices, or
+ *         SR_ERR_NA when libusb support is unavailable.
+ */
+SR_API int sr_dev_inst_usb_version_get(const struct sr_dev_inst *sdi, int *version)
+{
+#ifdef HAVE_LIBUSB_1_0
+	struct drv_context *drvc;
+	struct sr_usb_dev_inst *usb;
+	struct libusb_device **devlist;
+	struct libusb_device_descriptor des;
+	int cnt, i, ret;
+
+	if (version)
+		*version = 0;
+
+	if (!sdi || sdi->inst_type != SR_INST_USB || !sdi->conn ||
+			!sdi->driver || !sdi->driver->context)
+		return SR_ERR_ARG;
+
+	drvc = sdi->driver->context;
+	usb = sdi->conn;
+	if (!drvc->sr_ctx)
+		return SR_ERR_ARG;
+
+	if ((cnt = libusb_get_device_list(drvc->sr_ctx->libusb_ctx,
+			&devlist)) < 0) {
+		sr_err("Failed to retrieve device list: %s.",
+		       libusb_error_name(cnt));
+		return SR_ERR;
+	}
+
+	ret = SR_ERR;
+	for (i = 0; i < cnt; i++) {
+		if (libusb_get_bus_number(devlist[i]) != usb->bus ||
+				libusb_get_device_address(devlist[i]) != usb->address)
+			continue;
+		if (libusb_get_device_descriptor(devlist[i], &des) < 0)
+			break;
+		if (version) {
+			const int major = des.bcdUSB >> 8;
+			if (major >= 3)
+				*version = 3;
+			else if (major >= 2)
+				*version = 2;
+			else if (major >= 1)
+				*version = 1;
+		}
+		ret = SR_OK;
+		break;
+	}
+
+	libusb_free_device_list(devlist, 1);
+
+	return ret;
+#else
+	if (version)
+		*version = 0;
+	return SR_ERR_NA;
+#endif
+}
+
+/**
  * Queries a device instances' channel list.
  *
  * @param sdi Device instance to use. Must not be NULL.

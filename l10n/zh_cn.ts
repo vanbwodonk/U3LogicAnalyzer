@@ -2405,6 +2405,14 @@ Latest: %2</source><translation>发现新版本。
 最新版本：%2</translation></message>
     <message><source>Open Release Page</source><translation>打开发布页面</translation></message>
     <message><source>U3LogicAnalyzer %1 is up to date.</source><translation>U3LogicAnalyzer %1 已是最新版本。</translation></message>
+    <message><source>USB 2.0</source><translation>USB 2.0</translation></message>
+    <message><source>USB 3.0</source><translation>USB 3.0</translation></message>
+    <message><source>USB</source><translation>USB</translation></message>
+    <message><source>Serial</source><translation>串口</translation></message>
+    <message><source>SCPI</source><translation>SCPI</translation></message>
+    <message><source>Modbus</source><translation>Modbus</translation></message>
+    <message><source>Hardware device</source><translation>硬件设备</translation></message>
+    <message><source>Device Status: %1</source><translation>设备状态：%1</translation></message>
     <message><source>User Guide</source><translation>使用指南</translation></message>
 </context>
 <context>

@@ -1140,10 +1140,49 @@ namespace pv
 				device_status_icon_->setToolTip(tr("Device Status: USB 3.0"));
 				device_selector_.set_device_list_name("CH569  ·  USB 3.0");
 			} else {
-				device_status_icon_->setIcon(QIcon(":/icons/status-green.svg"));
-				device_status_icon_->setText(tr("Connected"));
-				device_status_icon_->setToolTip(tr("Device Status: Connected"));
-				device_selector_.set_device_list_name(tr("Connected"));
+				const QString model = QString::fromStdString(sr_dev->model());
+				QString name;
+				if (!model.isEmpty()) {
+					name = model;
+					if (!vendor.isEmpty() &&
+							!model.startsWith(vendor, Qt::CaseInsensitive))
+						name = vendor + " " + model;
+				} else if (!vendor.isEmpty()) {
+					name = vendor;
+				} else {
+					name = tr("Hardware device");
+				}
+
+				QString interface_text;
+				QIcon status_icon(":/icons/status-green.svg");
+				const int inst_type = sr_dev->instance_type();
+				if (inst_type == SR_INST_USB) {
+					const int usb_version = sr_dev->usb_version();
+					if (usb_version >= 3) {
+						interface_text = tr("USB 3.0");
+						status_icon = QIcon(":/icons/USB30.png");
+					} else if (usb_version == 2) {
+						interface_text = tr("USB 2.0");
+						status_icon = QIcon(":/icons/USB20.png");
+					} else {
+						interface_text = tr("USB");
+					}
+				} else if (inst_type == SR_INST_SERIAL) {
+					interface_text = tr("Serial");
+				} else if (inst_type == SR_INST_SCPI) {
+					interface_text = tr("SCPI");
+				} else if (inst_type == SR_INST_MODBUS) {
+					interface_text = tr("Modbus");
+				} else {
+					interface_text = tr("Connected");
+				}
+
+				device_status_icon_->setIcon(status_icon);
+				device_status_icon_->setText(interface_text);
+				device_status_icon_->setToolTip(
+					tr("Device Status: %1").arg(interface_text));
+				device_selector_.set_device_list_name(
+					QString("%1  ·  %2").arg(name, interface_text));
 			}
 			device_selector_.setIcon(QIcon(":/icons/status-green.svg"));
 			device_selector_.setToolTip(tr("Select analyzer"));

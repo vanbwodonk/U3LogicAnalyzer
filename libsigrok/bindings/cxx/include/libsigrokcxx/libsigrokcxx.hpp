@@ -389,6 +389,10 @@ public:
 	std::string serial_number() const;
 	/** Connection ID for this device. */
 	std::string connection_id() const;
+	/** Device instance type (SR_INST_USB, SR_INST_SERIAL, ...). */
+	int instance_type() const;
+	/** USB major version (2 or 3), or 0 when not a USB device/unknown. */
+	int usb_version() const;
 	/** List of the channels available on this device. */
 	std::vector<std::shared_ptr<Channel> > channels();
 	/** Channel groups available on this device, indexed by name. */

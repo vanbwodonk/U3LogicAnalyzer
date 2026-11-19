@@ -91,6 +91,8 @@ SR_API const char *sr_dev_inst_model_get(const struct sr_dev_inst *sdi);
 SR_API const char *sr_dev_inst_version_get(const struct sr_dev_inst *sdi);
 SR_API const char *sr_dev_inst_sernum_get(const struct sr_dev_inst *sdi);
 SR_API const char *sr_dev_inst_connid_get(const struct sr_dev_inst *sdi);
+SR_API int sr_dev_inst_type_get(const struct sr_dev_inst *sdi);
+SR_API int sr_dev_inst_usb_version_get(const struct sr_dev_inst *sdi, int *version);
 SR_API GSList *sr_dev_inst_channels_get(const struct sr_dev_inst *sdi);
 SR_API GSList *sr_dev_inst_channel_groups_get(const struct sr_dev_inst *sdi);
 
