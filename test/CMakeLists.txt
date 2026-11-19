@@ -52,6 +52,7 @@ set(pulseview_TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/pv/dialogs/inputoutputoptions.cpp
 	${PROJECT_SOURCE_DIR}/pv/dialogs/settings.cpp
 	${PROJECT_SOURCE_DIR}/pv/dialogs/storeprogress.cpp
+	${PROJECT_SOURCE_DIR}/pv/dialogs/triggerdialog.cpp
 	${PROJECT_SOURCE_DIR}/pv/prop/bool.cpp
 	${PROJECT_SOURCE_DIR}/pv/prop/double.cpp
 	${PROJECT_SOURCE_DIR}/pv/prop/enum.cpp
@@ -134,6 +135,7 @@ set(pulseview_TEST_HEADERS
 	${PROJECT_SOURCE_DIR}/pv/dialogs/inputoutputoptions.hpp
 	${PROJECT_SOURCE_DIR}/pv/dialogs/settings.hpp
 	${PROJECT_SOURCE_DIR}/pv/dialogs/storeprogress.hpp
+	${PROJECT_SOURCE_DIR}/pv/dialogs/triggerdialog.hpp
 	${PROJECT_SOURCE_DIR}/pv/popups/channels.hpp
 	${PROJECT_SOURCE_DIR}/pv/popups/deviceoptions.hpp
 	${PROJECT_SOURCE_DIR}/pv/prop/bool.hpp

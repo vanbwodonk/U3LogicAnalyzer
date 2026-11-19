@@ -624,30 +624,8 @@ void LogicSignal::populate_popup_form(QWidget *parent, QFormLayout *form)
 		this, SLOT(on_signal_height_changed(int)));
 	form->addRow(tr("Trace height"), signal_height_sb_);
 
-	// Trigger settings
-	const vector<int32_t> trig_types = get_trigger_types();
-
-	if (!trig_types.empty()) {
-		trigger_bar_ = new QToolBar(parent);
-		init_trigger_actions(trigger_bar_);
-		trigger_bar_->addAction(trigger_none_);
-		trigger_none_->setChecked(!trigger_match_);
-
-		for (auto type_id : trig_types) {
-			const TriggerMatchType *const type =
-				TriggerMatchType::get(type_id);
-			QAction *const action = action_from_trigger_type(type);
-			trigger_bar_->addAction(action);
-			action->setChecked(trigger_match_ == type);
-		}
-
-		// Only allow triggers to be changed when we're stopped
-		if (session_.get_capture_state() != Session::Stopped)
-			for (QAction* action : trigger_bar_->findChildren<QAction*>())  // clazy:exclude=range-loop
-				action->setEnabled(false);
-
-		form->addRow(tr("Trigger"), trigger_bar_);
-	}
+	// Trigger configuration lives in Device → Trigger Option. A per-channel
+	// toolbar here would conflict with advanced (multi-stage) triggers.
 }
 
 void LogicSignal::modify_trigger()

@@ -2516,6 +2516,7 @@ Latest: %2</source><translation>发现新版本。
         <source>Hex Dumps (*.txt);;All Files (*)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message><source>Trigger Option</source><translation>触发选项</translation></message>
 </context>
 <context>
     <name>pv::views::tabular_decoder</name>
@@ -3680,5 +3681,30 @@ until (condition)
         <source>Import %1...</source>
         <translation>导入 %1...</translation>
     </message>
+</context>
+<context>
+    <name>pv::dialogs::TriggerDialog</name>
+    <message><source>Trigger Option</source><translation>触发选项</translation></message>
+    <message><source>Simple Trigger</source><translation>简单触发</translation></message>
+    <message><source>Advanced Trigger</source><translation>高级触发</translation></message>
+    <message><source>Trigger Position:</source><translation>触发位置：</translation></message>
+    <message><source>Total Trigger Stages:</source><translation>总触发级数：</translation></message>
+    <message><source>Stage Trigger</source><translation>阶段触发</translation></message>
+    <message><source>Serial Trigger</source><translation>串行触发</translation></message>
+    <message><source>Stage %1</source><translation>第 %1 级</translation></message>
+    <message><source>X: Don&apos;t care
+0: Low level
+1: High level
+R: Rising edge
+F: Falling edge
+C: Rising/Falling edge</source><translation>X：不关心
+0：低电平
+1：高电平
+R：上升沿
+F：下降沿
+C：上升/下降沿</translation></message>
+    <message><source>Serial Trigger is not supported by the current libsigrok DSLogic driver.</source><translation>当前 libsigrok DSLogic 驱动不支持串行触发。</translation></message>
+    <message><source>Advanced Trigger is not available in Stream mode.</source><translation>Stream 模式下不能使用高级触发。</translation></message>
+    <message><source>Failed to set trigger position: %1</source><translation>设置触发位置失败：%1</translation></message>
 </context>
 </TS>

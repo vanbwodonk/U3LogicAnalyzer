@@ -24,6 +24,9 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - For long captures prefer Stream mode: buffer mode uploads only after the
   acquisition finishes, while stream mode transfers data during acquisition
   (2 s @ 10 MHz / 16 ch: ~2.0 s stream vs ~3.4 s buffer)
+- Device → Trigger Option provides Simple per-channel triggers and
+  multi-stage Advanced triggers (up to 16 stages). Serial trigger, per-channel
+  invert/counter controls are not supported by the current libsigrok driver.
 - DSLogic buffer depth is enforced in the sample-count list: uncompressed
   buffer depth is `256 Mbit / channels`, so 400 MHz with 4 channels is limited
   to 167.77 ms. Enabling RLE extends the available depth.

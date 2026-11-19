@@ -306,6 +306,7 @@ set(pulseview_SOURCES
 	pv/dialogs/iapdialog.cpp
 	pv/dialogs/inputoutputoptions.cpp
 	pv/dialogs/settings.cpp
+	pv/dialogs/triggerdialog.cpp
 	pv/dialogs/storeprogress.cpp
 	pv/popups/deviceoptions.cpp
 	pv/popups/channels.cpp
@@ -378,6 +379,7 @@ set(pulseview_HEADERS
 	pv/dialogs/inputoutputoptions.hpp
 	pv/dialogs/settings.hpp
 	pv/dialogs/storeprogress.hpp
+	pv/dialogs/triggerdialog.hpp
 	pv/popups/channels.hpp
 	pv/popups/deviceoptions.hpp
 	pv/prop/bool.hpp

@@ -51,6 +51,7 @@
 #include "devicemanager.hpp"
 #include "devices/hardwaredevice.hpp"
 #include "dialogs/settings.hpp"
+#include "dialogs/triggerdialog.hpp"
 #include "globalsettings.hpp"
 #include "toolbars/mainbar.hpp"
 #include "util.hpp"
@@ -379,6 +380,9 @@ void MainWindow::setup_application_menu(MainBar *main_bar)
 	connect(action_refresh_devices_, &QAction::triggered, this, &MainWindow::refresh_devices_now);
 	menu_device_->addSeparator();
 	menu_device_->addAction(main_bar->action_device_options());
+	action_trigger_option_ = menu_device_->addAction(tr("Trigger Option"));
+	connect(action_trigger_option_, &QAction::triggered,
+		this, &MainWindow::show_trigger_option);
 
 	menu_acquisition_ = bar->addMenu(tr("Acquisition"));
 	menu_acquisition_->addAction(main_bar->action_single());
@@ -424,6 +428,7 @@ void MainWindow::retranslate_application_menu()
 	if (action_preferences_) action_preferences_->setText(tr("Preferences..."));
 	if (action_quit_) action_quit_->setText(tr("Quit"));
 	if (action_refresh_devices_) action_refresh_devices_->setText(tr("Refresh Devices"));
+	if (action_trigger_option_) action_trigger_option_->setText(tr("Trigger Option"));
 	if (action_start_stop_) action_start_stop_->setText(tr("Start / Stop"));
 	if (action_add_decoder_) action_add_decoder_->setText(tr("Add Protocol Decoder"));
 }
@@ -676,6 +681,15 @@ void MainWindow::refresh_devices_now()
 		usb_snapshot_initialized_ = true;
 	}
 	refresh_hardware_devices();
+}
+
+void MainWindow::show_trigger_option()
+{
+	if (!last_focused_session_ || !last_focused_session_->device())
+		return;
+
+	dialogs::TriggerDialog dialog(*last_focused_session_, this);
+	dialog.exec();
 }
 
 void MainWindow::disconnect_current_device()

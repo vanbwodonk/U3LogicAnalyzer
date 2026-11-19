@@ -772,40 +772,44 @@ static bool set_trigger(const struct sr_dev_inst *sdi, struct fpga_config_common
 	}
 
 	for (l = trigger->stages; l; l = l->next) {
+		if (num_trigger_stages >= NUM_TRIGGER_STAGES)
+			break;
+
 		stage = l->data;
-		num_trigger_stages++;
 		for (m = stage->matches; m; m = m->next) {
 			match = m->data;
 			if (!match->channel->enabled)
 				/* Ignore disabled channels with a trigger. */
 				continue;
 			channelbit = 1 << (match->channel->index);
-			/* Simple trigger support (event). */
+			/* One trigger stage. Each stage contains the channel
+			 * pattern/edge configuration for that stage. */
 			if (match->match == SR_TRIGGER_ONE) {
-				cfg->trig_mask0[0] &= ~channelbit;
-				cfg->trig_mask1[0] &= ~channelbit;
-				cfg->trig_value0[0] |= channelbit;
-				cfg->trig_value1[0] |= channelbit;
+				cfg->trig_mask0[num_trigger_stages] &= ~channelbit;
+				cfg->trig_mask1[num_trigger_stages] &= ~channelbit;
+				cfg->trig_value0[num_trigger_stages] |= channelbit;
+				cfg->trig_value1[num_trigger_stages] |= channelbit;
 			} else if (match->match == SR_TRIGGER_ZERO) {
-				cfg->trig_mask0[0] &= ~channelbit;
-				cfg->trig_mask1[0] &= ~channelbit;
+				cfg->trig_mask0[num_trigger_stages] &= ~channelbit;
+				cfg->trig_mask1[num_trigger_stages] &= ~channelbit;
 			} else if (match->match == SR_TRIGGER_FALLING) {
-				cfg->trig_mask0[0] &= ~channelbit;
-				cfg->trig_mask1[0] &= ~channelbit;
-				cfg->trig_edge0[0] |= channelbit;
-				cfg->trig_edge1[0] |= channelbit;
+				cfg->trig_mask0[num_trigger_stages] &= ~channelbit;
+				cfg->trig_mask1[num_trigger_stages] &= ~channelbit;
+				cfg->trig_edge0[num_trigger_stages] |= channelbit;
+				cfg->trig_edge1[num_trigger_stages] |= channelbit;
 			} else if (match->match == SR_TRIGGER_RISING) {
-				cfg->trig_mask0[0] &= ~channelbit;
-				cfg->trig_mask1[0] &= ~channelbit;
-				cfg->trig_value0[0] |= channelbit;
-				cfg->trig_value1[0] |= channelbit;
-				cfg->trig_edge0[0] |= channelbit;
-				cfg->trig_edge1[0] |= channelbit;
+				cfg->trig_mask0[num_trigger_stages] &= ~channelbit;
+				cfg->trig_mask1[num_trigger_stages] &= ~channelbit;
+				cfg->trig_value0[num_trigger_stages] |= channelbit;
+				cfg->trig_value1[num_trigger_stages] |= channelbit;
+				cfg->trig_edge0[num_trigger_stages] |= channelbit;
+				cfg->trig_edge1[num_trigger_stages] |= channelbit;
 			} else if (match->match == SR_TRIGGER_EDGE) {
-				cfg->trig_edge0[0] |= channelbit;
-				cfg->trig_edge1[0] |= channelbit;
+				cfg->trig_edge0[num_trigger_stages] |= channelbit;
+				cfg->trig_edge1[num_trigger_stages] |= channelbit;
 			}
 		}
+		num_trigger_stages++;
 	}
 
 	if (devc->api_version == DS_API_V1)

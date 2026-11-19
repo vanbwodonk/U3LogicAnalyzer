@@ -108,6 +108,10 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - `pv/dialogs/iapdialog.*` — HID firmware upgrade (CH375 IAP is Windows-only);
   `pv/dialogs/decoder_channel_dialog.*` — decoder channel assignment.
 - `pv/devicepresence.*` — pure USB identity/snapshot-diff helpers.
+- `pv/dialogs/triggerdialog.*` — Device → Trigger Option. Simple mode is a
+  per-channel match table; Advanced mode builds multi-stage libsigrok triggers
+  (up to 16 stages). Serial trigger and per-channel invert/counter are not
+  supported by the DSLogic driver.
 - `pv/popups/channels.*` — the Device Options dialog (Acquisition/Channels
   tabs). Non-WCH devices get a generic `binding::Device` hardware form from
   libsigrok config keys; the DSLogic threshold is exposed as a 0.1 V slider.

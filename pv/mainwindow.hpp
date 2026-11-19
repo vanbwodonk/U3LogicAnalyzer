@@ -147,6 +147,7 @@ public Q_SLOTS:
 	void on_device_attached();
 	void refresh_devices_now();
 	void disconnect_current_device();
+	void show_trigger_option();
 
 private:
 	void do_device_detach_switch();
@@ -239,6 +240,7 @@ private:
 	QAction *action_preferences_ = nullptr;
 	QAction *action_quit_ = nullptr;
 	QAction *action_refresh_devices_ = nullptr;
+	QAction *action_trigger_option_ = nullptr;
 	QAction *action_start_stop_ = nullptr;
 	QAction *action_add_decoder_ = nullptr;
 };

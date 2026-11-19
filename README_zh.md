@@ -22,6 +22,8 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
 - 长时间采集建议使用 Stream 模式：Buffer 模式要等采集结束后才上传数据，
   Stream 模式边采集边传输（2 秒 @10MHz/16 通道：Stream 约 2.0 秒，
   Buffer 约 3.4 秒）
+- 设备 → 触发选项 提供简单逐通道触发，以及最多 16 级的高级触发；
+  当前 libsigrok 驱动不支持串行触发和逐通道反相/计数控制。
 - DSLogic Buffer 深度已反映在采样时长列表中：未启用 RLE 时深度为
   `256 Mbit / 通道数`，因此 400MHz、4 通道最大为 167.77ms；启用 RLE
   可以增加可用深度。
