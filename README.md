@@ -75,6 +75,11 @@ Linux (Debian/Ubuntu example):
 ```bash
 ./build_macos.sh            # output: build/pulseview_build/LogicAnalyzer
 ./build_macos.sh --clean    # full rebuild
+
+# Linux-only alternative
+./build_linux.sh            # output: build/linux/pulseview_build/LogicAnalyzer
+./build_linux.sh --debug    # debug build
+./build_linux.sh --clean --run
 ```
 
 ### Step 4 - Run

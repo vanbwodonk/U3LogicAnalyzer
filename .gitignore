@@ -69,3 +69,6 @@ test/cmake_install.cmake
 
 # Translation binaries
 *.qm
+
+# Local Arch Linux packaging
+/AUR/

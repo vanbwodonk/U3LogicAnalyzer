@@ -15,8 +15,9 @@ vendored in-tree:
 - `libsigrokdecode/` — libsigrokdecode `0.6.0` with 130 Python decoders.
 - `firmware/` — MounRiver Studio projects (CH32H417 APP/IAP, V3F/V5F) and
   prebuilt firmware images. This is **not** part of the CMake build.
-- `build_macos.sh`, `build_windows.sh`, `package_app.sh` — supported build and
-  packaging entry points.
+- `build_macos.sh`, `build_linux.sh`, `build_windows.sh`, `package_app.sh` —
+  supported build and packaging entry points. `build_linux.sh` is the
+  Linux-only helper (release/debug, separate `build/linux` tree).
 - `.github/workflows/build.yml` — macOS/Linux/Windows CI; `v*` tags create a
   GitHub Release.
 
@@ -34,6 +35,8 @@ macOS / Linux, from the repo root:
 ```
 
 - Main binary: `build/pulseview_build/LogicAnalyzer`.
+- Linux-only helper: `./build_linux.sh` (release), `--debug`, `--clean`,
+  `--run`; it uses a separate `build/linux` tree and install prefix.
 - Headless sanity check:
   `QT_QPA_PLATFORM=offscreen ./build/pulseview_build/LogicAnalyzer -V`.
 - Debug device detection with `-l 5`; a working CH32H417 logs

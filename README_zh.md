@@ -55,6 +55,7 @@ U3LogicAnalyzer/
 ├── libsigrok/                       # sigrok 后端（含 wch-ch32h417 驱动）
 ├── libsigrokdecode/                 # 130 个协议解码器
 ├── build_macos.sh                   # macOS / Linux 构建脚本
+├── build_linux.sh                   # 仅 Linux 构建脚本（支持 --debug）
 ├── build_windows.sh                 # Windows（MSYS2）构建脚本
 ├── package_app.sh                   # macOS .app / DMG 打包
 └── .github/workflows/build.yml      # CI：三平台构建 + tag 发布
@@ -85,12 +86,19 @@ sudo apt install build-essential cmake ninja-build pkg-config \
 cd U3LogicAnalyzer
 ./build_macos.sh            # 构建（产物在 build/，已被 .gitignore 忽略）
 ./build_macos.sh --clean    # 全量重编（改过驱动或 CMake 后建议先 clean）
+
+# 仅 Linux 的构建脚本
+./build_linux.sh            # 产物：build/linux/pulseview_build/LogicAnalyzer
+./build_linux.sh --debug    # Debug 构建
+./build_linux.sh --clean --run
 ```
 
 脚本按顺序构建并安装到 `build/install/`：libsigrok（含 wch-ch32h417 驱动）
 → libsigrokcxx → libsigrokdecode（130 个解码器）→ LogicAnalyzer。
+`build_linux.sh` 默认使用独立的 `build/linux/` 目录。
 
-产物：`build/pulseview_build/LogicAnalyzer`
+产物：`build/pulseview_build/LogicAnalyzer`（`build_linux.sh` 为
+`build/linux/pulseview_build/LogicAnalyzer`）
 
 ### 第 4 步：运行
 
