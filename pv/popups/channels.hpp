@@ -66,6 +66,12 @@ class SignalBase;
 
 namespace popups {
 
+struct DslogicChannelMode {
+	bool stream;
+	uint16_t channels;
+	uint64_t max_samplerate;
+};
+
 class Channels : public pv::widgets::Popup
 {
 	Q_OBJECT
@@ -127,6 +133,7 @@ private:
 	void init_wch_ui();
 	void init_other_ui();
 	void init_dslogic_ui();
+	void load_dslogic_channel_modes();
 	void rebuild_dslogic_channel_radios();
 	void apply_dslogic_channel_mode(int index);
 	void init_channel_radios(QVBoxLayout* layout);
@@ -169,6 +176,7 @@ private:
 	QGroupBox* dslogic_channel_group_;
 	QVBoxLayout* dslogic_channel_layout_;
 	vector<QRadioButton*> dslogic_channel_radios_;
+	vector<DslogicChannelMode> dslogic_modes_;
 
 	vector<QCheckBox*> logic_checkboxes_;
 	vector<QCheckBox*> analog_checkboxes_;

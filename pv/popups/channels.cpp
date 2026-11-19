@@ -69,33 +69,6 @@ using namespace pv::util;
 namespace pv {
 namespace popups {
 
-namespace {
-
-struct DslogicChannelMode {
-	uint16_t channels;
-	uint64_t max_samplerate;
-};
-
-const DslogicChannelMode dslogic_buffer_modes[] = {
-	{16, SR_MHZ(100)},
-	{8, SR_MHZ(200)},
-	{4, SR_MHZ(400)},
-};
-
-const DslogicChannelMode dslogic_stream_modes[] = {
-	{16, SR_MHZ(20)},
-	{12, SR_MHZ(25)},
-	{6, SR_MHZ(50)},
-	{3, SR_MHZ(100)},
-};
-
-const int dslogic_buffer_mode_count =
-	(int)(sizeof(dslogic_buffer_modes) / sizeof(dslogic_buffer_modes[0]));
-const int dslogic_stream_mode_count =
-	(int)(sizeof(dslogic_stream_modes) / sizeof(dslogic_stream_modes[0]));
-
-} // namespace
-
 Channels::Channels(Session &session, QString device_name, QWidget *parent) :
 	Popup(parent),
 	session_(session),
@@ -473,6 +446,7 @@ void Channels::init_dslogic_ui()
 	dslogic_channel_layout_ = new QVBoxLayout(dslogic_channel_group_);
 	acquisition_layout_->addRow(dslogic_channel_group_);
 
+	load_dslogic_channel_modes();
 	rebuild_dslogic_channel_radios();
 
 	connect(dslogic_operation_mode_, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -510,6 +484,43 @@ void Channels::init_dslogic_ui()
 	});
 }
 
+void Channels::load_dslogic_channel_modes()
+{
+	dslogic_modes_.clear();
+
+	const shared_ptr<sigrok::Device> dev = session_.device()->device();
+	if (!dev->config_check(sigrok::ConfigKey::CHANNEL_CONFIG,
+			sigrok::Capability::LIST)) {
+		qWarning() << tr("DSLogic channel mode list is not available from the driver.");
+		return;
+	}
+
+	try {
+		auto list = dev->config_list(sigrok::ConfigKey::CHANNEL_CONFIG);
+		for (unsigned int i = 0; i < list.get_n_children(); i++) {
+			Glib::VariantBase child;
+			list.get_child(child, i);
+			const QString spec = QString::fromStdString(
+				Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(child).get());
+			const QStringList parts = spec.split(':');
+			if (parts.size() != 3)
+				continue;
+
+			DslogicChannelMode mode;
+			mode.stream = (parts[0] == "stream");
+			mode.channels = (uint16_t)parts[1].toUShort();
+			mode.max_samplerate = parts[2].toULongLong();
+			if (mode.channels > 0 && mode.max_samplerate > 0)
+				dslogic_modes_.push_back(mode);
+		}
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to read DSLogic channel mode list:") << e.what();
+	}
+
+	if (dslogic_modes_.empty())
+		qWarning() << tr("DSLogic driver returned an empty channel mode list.");
+}
+
 void Channels::rebuild_dslogic_channel_radios()
 {
 	if (!dslogic_channel_layout_)
@@ -524,28 +535,35 @@ void Channels::rebuild_dslogic_channel_radios()
 	const bool stream = dslogic_operation_mode_ &&
 		dslogic_operation_mode_->currentIndex() == 1;
 
-	const DslogicChannelMode* modes =
-		stream ? dslogic_stream_modes : dslogic_buffer_modes;
-	const int count =
-		stream ? dslogic_stream_mode_count : dslogic_buffer_mode_count;
+	vector<const DslogicChannelMode*> modes;
+	for (const DslogicChannelMode &mode : dslogic_modes_)
+		if (mode.stream == stream)
+			modes.push_back(&mode);
 
-	for (int i = 0; i < count; ++i) {
+	if (modes.empty()) {
+		qWarning() << tr("No DSLogic channel modes for the selected operation mode.");
+		channel_max_ = 0;
+		return;
+	}
+
+	for (size_t i = 0; i < modes.size(); ++i) {
+		const DslogicChannelMode &mode = *modes[i];
 		QRadioButton* radio = new QRadioButton(
 			tr("Use %1 Channels (Max %2 MHz)")
-				.arg(modes[i].channels)
-				.arg(modes[i].max_samplerate / SR_MHZ(1)),
+				.arg(mode.channels)
+				.arg(mode.max_samplerate / SR_MHZ(1)),
 			dslogic_channel_group_);
 		radio->setMinimumHeight(radio->fontMetrics().height() + 10);
 		dslogic_channel_layout_->addWidget(radio);
 		dslogic_channel_radios_.push_back(radio);
 		connect(radio, &QRadioButton::clicked, this,
-			[this, i]() { apply_dslogic_channel_mode(i); });
+			[this, i]() { apply_dslogic_channel_mode((int)i); });
 	}
 
 	// Default to all channels; the user can trade channel count for rate.
 	const int default_index = 0;
 	dslogic_channel_radios_[default_index]->setChecked(true);
-	channel_max_ = modes[default_index].channels;
+	channel_max_ = modes[default_index]->channels;
 }
 
 void Channels::apply_dslogic_channel_mode(int index)
@@ -553,14 +571,15 @@ void Channels::apply_dslogic_channel_mode(int index)
 	const bool stream = dslogic_operation_mode_ &&
 		dslogic_operation_mode_->currentIndex() == 1;
 
-	const DslogicChannelMode* modes =
-		stream ? dslogic_stream_modes : dslogic_buffer_modes;
-	const int count =
-		stream ? dslogic_stream_mode_count : dslogic_buffer_mode_count;
-	if (index < 0 || index >= count)
+	vector<const DslogicChannelMode*> modes;
+	for (const DslogicChannelMode &candidate : dslogic_modes_)
+		if (candidate.stream == stream)
+			modes.push_back(&candidate);
+
+	if (index < 0 || (size_t)index >= modes.size())
 		return;
 
-	const DslogicChannelMode& mode = modes[index];
+	const DslogicChannelMode& mode = *modes[index];
 	channel_max_ = mode.channels;
 
 	updating_channels_ = true;

@@ -22,6 +22,22 @@
 #include <math.h>
 #include "protocol.h"
 
+struct dslogic_channel_mode {
+	const char *operation;
+	uint16_t channels;
+	uint64_t max_samplerate;
+};
+
+static const struct dslogic_channel_mode channel_modes[] = {
+	{"buffer", 16, SR_MHZ(100)},
+	{"buffer", 8, SR_MHZ(200)},
+	{"buffer", 4, SR_MHZ(400)},
+	{"stream", 16, SR_MHZ(20)},
+	{"stream", 12, SR_MHZ(25)},
+	{"stream", 6, SR_MHZ(50)},
+	{"stream", 3, SR_MHZ(100)},
+};
+
 static const struct dslogic_profile supported_device[] = {
 	/* DreamSourceLab DSLogic */
 	{ 0x2a0e, 0x0001, "DreamSourceLab", "DSLogic", NULL,
@@ -75,6 +91,7 @@ static const uint32_t drvopts[] = {
 static const uint32_t devopts[] = {
 	SR_CONF_CONTINUOUS | SR_CONF_SET | SR_CONF_GET,
 	SR_CONF_LIMIT_SAMPLES | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
+	SR_CONF_CHANNEL_CONFIG | SR_CONF_LIST,
 	SR_CONF_VOLTAGE_THRESHOLD | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
 	SR_CONF_CONN | SR_CONF_GET,
 	SR_CONF_SAMPLERATE | SR_CONF_GET | SR_CONF_SET | SR_CONF_LIST,
@@ -572,6 +589,26 @@ static int config_list(uint32_t key, GVariant **data,
 	devc = (sdi) ? sdi->priv : NULL;
 
 	switch (key) {
+	case SR_CONF_CHANNEL_CONFIG:
+		{
+			const char *items[ARRAY_SIZE(channel_modes)];
+			char *allocated[ARRAY_SIZE(channel_modes)];
+			unsigned int i;
+
+			for (i = 0; i < ARRAY_SIZE(channel_modes); i++) {
+				allocated[i] = g_strdup_printf("%s:%u:%" G_GUINT64_FORMAT,
+					channel_modes[i].operation,
+					channel_modes[i].channels,
+					channel_modes[i].max_samplerate);
+				items[i] = allocated[i];
+			}
+
+			*data = std_gvar_array_str(items, ARRAY_SIZE(items));
+
+			for (i = 0; i < ARRAY_SIZE(allocated); i++)
+				g_free(allocated[i]);
+		}
+		break;
 	case SR_CONF_LIMIT_SAMPLES:
 		if (!devc || !devc->profile)
 			return SR_ERR_ARG;
