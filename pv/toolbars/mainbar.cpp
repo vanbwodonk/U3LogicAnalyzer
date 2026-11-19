@@ -2023,6 +2023,13 @@ namespace pv
 			// device's sample-count list.
 			selected_sample_count_ = 0;
 
+			// MaxSampleRate is shared between devices; reset it to a no-op
+			// cap so the previous analyzer's channel-mode limit does not
+			// clip the new device's sample-rate list until that device
+			// reports its own limit.
+			MaxSampleRate = SR_GHZ(1);
+			dslogic_max_samplerate_ = 0;
+
 			update_device_list();
 			update_device_status_icon();
 			if (device_selector_.selected_device())
