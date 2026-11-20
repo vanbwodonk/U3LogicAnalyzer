@@ -13,8 +13,8 @@ PulseView 0.5.0 修改，内置完整的 sigrok 软件栈（libsigrok + libsigro
 - **硬件支持**：CH32H417（USB3.0，最高 200MHz 采样）、CH569 热插拔检测
 - **完整 libsigrok 驱动集**：FX2LAFW/Saleae Logic、DreamSourceLab、Hantek、
   串口万用表/电源、SCPI 仪器等
-- 内置 DreamSourceLab 与 FX2LAFW 固件（无需 DSView 或
-  `sigrok-firmware-fx2lafw` 包）
+- 内置 DreamSourceLab、FX2LAFW、ASIX Sigma、Sysclk LWLA1034 固件
+  （见 `firmware/README.md`）
 - 硬件相关设备选项：阈值电压（DSLogic 0.0-5.0 V，0.1 V 步进）、
   Buffer/Stream 模式、RLE、触发位置、外部时钟、时钟边沿
 - DSLogic 通道模式：Buffer 4 通道 @400MHz / 8 通道 @200MHz /

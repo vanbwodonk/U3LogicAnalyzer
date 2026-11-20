@@ -14,8 +14,9 @@ vendored in-tree:
   etc.) plus the U3 `wch-ch32h417` driver.
 - `libsigrokdecode/` — libsigrokdecode `0.6.0` with 130 Python decoders.
 - `firmware/` — MounRiver Studio projects (CH32H417 APP/IAP, V3F/V5F) and
-  prebuilt images; `firmware/dreamsourcelab/` and `firmware/fx2lafw/` contain
-  bundled DSLogic and FX2LAFW firmware installed by CMake.
+  prebuilt images; `firmware/dreamsourcelab/`, `firmware/fx2lafw/`,
+  `firmware/asix-sigma/` and `firmware/sysclk-lwla/` contain bundled firmware
+  installed by CMake.
 - `build_macos.sh`, `build_linux.sh`, `build_windows.sh`, `package_app.sh` —
   supported build and packaging entry points. `build_linux.sh` is the
   Linux-only helper (release/debug, separate `build/linux` tree).
@@ -176,7 +177,11 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   `run.bat` do this for you.
 - FX2LAFW analyzers use the bundled `firmware/fx2lafw/` images. The app was
   verified end-to-end with a Saleae Logic (`0925:3881`); after upload the
-  device re-enumerates as a sigrok FX2LAFW device.
+  device re-enumerates as a sigrok FX2LAFW device. `firmware/asix-sigma/` and
+  `firmware/sysclk-lwla/` hold the freely redistributable firmware for those
+  drivers; Saleae Logic16/Pro, LeCroy, Kingst, LWLA1016 and SLA5032 firmware
+  is not bundled because it is not freely redistributable (see
+  `firmware/README.md`).
 - The DreamSourceLab DSLogic driver includes the API v2 support from libsigrok
   PR #170 (DSLogic Plus `2a0e:0020`, U3Pro16 `2a0e:002a`). Scan must tolerate
   unreadable USB string descriptors and `dslogic_dev_open()` falls back to

@@ -149,8 +149,7 @@ done
 
 cp -R "$PREFIX/share/libsigrokdecode/decoders" "$PVDIR/decoders"
 mkdir -p "$PVDIR/sigrok-firmware"
-cp -f "$SCRIPT_DIR"/firmware/dreamsourcelab/*.fw "$PVDIR/sigrok-firmware"/
-cp -f "$SCRIPT_DIR"/firmware/fx2lafw/*.fw "$PVDIR/sigrok-firmware"/
+find "$SCRIPT_DIR/firmware" -mindepth 2 -maxdepth 2 -type f \( -name '*.fw' -o -name '*.rbf' \) -exec cp -f {} "$PVDIR/sigrok-firmware"/ \;
 
 cat > "$PVDIR/run.bat" << 'RBEOF'
 @echo off

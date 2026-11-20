@@ -14,8 +14,8 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - CH32H417 (USB 3.0, up to 200 MHz sampling) and CH569 hot-plug detection
 - Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
   DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
-- Bundled DreamSourceLab and FX2LAFW firmware (no DSView or
-  `sigrok-firmware-fx2lafw` package needed)
+- Bundled DreamSourceLab, FX2LAFW, ASIX Sigma, and Sysclk LWLA1034
+  firmware (see `firmware/README.md`)
 - Hardware-aware Device Options: voltage threshold (DSLogic: 0.0-5.0 V in
   0.1 V steps), Buffer/Stream mode, RLE, capture ratio, external clock and
   clock edge

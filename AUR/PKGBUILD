@@ -162,7 +162,7 @@ package() {
     # Bundled DreamSourceLab firmware. Prefer the copy in the checked-out
     # source tree; fall back to the firmware directory next to this PKGBUILD
     # so local AUR copies work even before the firmware is pushed upstream.
-    for fw_name in dreamsourcelab fx2lafw; do
+    for fw_name in dreamsourcelab fx2lafw asix-sigma sysclk-lwla; do
         local fw_src=""
         for fw_dir in "$srcdir/$pkgname/firmware/$fw_name" \
                       "$startdir/firmware/$fw_name"; do
@@ -173,7 +173,8 @@ package() {
         done
         if [[ -n "$fw_src" ]]; then
             install -d "$pkgdir/usr/share/sigrok-firmware"
-            install -m644 "$fw_src"/*.fw "$pkgdir/usr/share/sigrok-firmware/"
+            find "$fw_src" -maxdepth 1 -type f \( -name '*.fw' -o -name '*.rbf' \) \
+                -exec install -m644 {} "$pkgdir/usr/share/sigrok-firmware/" \;
             install -Dm644 "$fw_src/LICENSE" \
                 "$pkgdir/usr/share/licenses/$pkgname/$fw_name-firmware-LICENSE"
         fi

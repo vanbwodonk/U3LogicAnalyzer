@@ -760,6 +760,24 @@ install(FILES firmware/fx2lafw/LICENSE
     RENAME fx2lafw-firmware-LICENSE
 )
 
+# ASIX Sigma and Sysclk LWLA firmware.
+install(DIRECTORY firmware/asix-sigma/
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/sigrok-firmware
+    FILES_MATCHING PATTERN "*.fw"
+)
+install(FILES firmware/asix-sigma/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/U3LogicAnalyzer
+    RENAME asix-sigma-firmware-LICENSE
+)
+install(DIRECTORY firmware/sysclk-lwla/
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/sigrok-firmware
+    FILES_MATCHING PATTERN "*.rbf"
+)
+install(FILES firmware/sysclk-lwla/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/U3LogicAnalyzer
+    RENAME sysclk-lwla-firmware-LICENSE
+)
+
 # USB access rules for libsigrok hardware (DreamSourceLab, Saleae, etc.).
 # Arch uses systemd-logind uaccess ACLs; install the generic + uaccess rules.
 if(UNIX AND NOT APPLE)
