@@ -1,5 +1,4 @@
 /*
-#include <cmath>
  * This file is part of the LogicAnalyzer project.
  * LogicAnaylzer is based on Pulseview.
  *
@@ -23,6 +22,7 @@
 #include "sweeptimingwidget.hpp"
 #include <QDebug>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -142,6 +142,11 @@ string SweepTimingWidget::formatTranFer(double num)
     int n = 0;
     double temp = num;
 	double res;
+
+    // Guard zero/NaN/negative: the loop below would spin forever for 0.
+    if (!(num > 0) || !std::isfinite(num))
+        return "0";
+
     if (temp < 1)
     {
         while(temp < 1)
