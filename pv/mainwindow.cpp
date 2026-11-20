@@ -1240,7 +1240,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 			return;
 		}
 	}
-	if (last_focused_session_ && is_wch_device(last_focused_session_->main_bar()->channels_->device_name_)){
+	if (last_focused_session_ && last_focused_session_->main_bar() &&
+			is_wch_device(last_focused_session_->main_bar()->get_vendorName())) {
 		save_sessions();
 		last_focused_session_->main_bar()->set_setting_default();
 	}
