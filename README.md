@@ -72,7 +72,7 @@ point at alternative source directories (or sibling dirs with the same names).
 macOS (Homebrew):
 
 ```bash
-brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
+brew install pkgconf cmake ninja qt glibmm@2.66 glib libusb hidapi \
              libserialport libftdi nettle libzip boost python@3.14
 ```
 
@@ -80,7 +80,7 @@ Linux (Debian/Ubuntu example):
 
 ```bash
     sudo apt install build-essential cmake ninja-build pkg-config \
-      qtbase5-dev qttools5-dev libqt5svg5-dev libglib2.0-dev \
+      qt6-base-dev qt6-tools-dev qt6-l10n-tools libqt6svg6-dev libglib2.0-dev \
       libglibmm-2.4-dev libusb-1.0-0-dev libserialport-dev \
       libftdi1-dev libnettle-dev libieee1284-3-dev libbluetooth-dev \
       libhidapi-dev libzip-dev libboost-dev libboost-filesystem-dev \
@@ -133,7 +133,7 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
 (e.g. `git tag v1.1 && git push origin v1.1`) creates a GitHub Release with:
 
 - `U3LogicAnalyzer.dmg` (macOS installer image)
-- `U3LogicAnalyzer-linux.tar.gz` (Linux binary + decoders; needs system Qt5/glib)
+- `U3LogicAnalyzer-linux.tar.gz` (Linux binary + decoders; needs system Qt6/glib)
 - `LogicAnalyzer-win64.zip` (Windows portable package)
 
 ## Known limitations
@@ -194,8 +194,9 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   export SIGROK_FIRMWARE_DIR="$PWD/firmware/dreamsourcelab"
   ```
 
-- App fails to launch after packaging? Make sure the qt@5 `macdeployqt` is
-  used (the script pins it) and no stale `build/LogicAnalyzer.app` remains.
+- App fails to launch after packaging? Make sure the Qt6 `macdeployqt` is
+  used (the script pins `/opt/homebrew/opt/qt`) and no stale
+  `build/LogicAnalyzer.app` remains.
 
 ## Licensing
 

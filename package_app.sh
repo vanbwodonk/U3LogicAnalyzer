@@ -35,12 +35,11 @@ if [ "$(uname -s)" != "Darwin" ]; then
 	exit 1
 fi
 
-# 必须用 qt@5 自带的 macdeployqt；机器上若同时装有 Qt6，
-# PATH 里的 macdeployqt 很可能是 Qt6 版本，会把 Qt6 插件打进 app。
-MACDEPLOYQT="/opt/homebrew/opt/qt@5/bin/macdeployqt"
+# 使用 Homebrew Qt6 自带的 macdeployqt，把 Qt6 框架与插件打进 app。
+MACDEPLOYQT="/opt/homebrew/opt/qt/bin/macdeployqt"
 [ -x "$MACDEPLOYQT" ] || MACDEPLOYQT="$(command -v macdeployqt 2>/dev/null)"
 if [ -z "$MACDEPLOYQT" ]; then
-	echo "[错误] 找不到 macdeployqt，请安装 qt@5"
+	echo "[错误] 找不到 macdeployqt，请安装 qt"
 	exit 1
 fi
 

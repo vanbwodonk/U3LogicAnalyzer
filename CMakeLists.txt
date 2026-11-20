@@ -19,7 +19,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.21)
 
 project(pulseview C CXX)
 
@@ -33,6 +33,11 @@ endif()
 # Only interpret if() arguments as variables or keywords when unquoted.
 if(POLICY CMP0054)
 	cmake_policy(SET CMP0054 NEW)
+endif()
+
+# CMake 4 removed the FindBoost module; use BoostConfig instead.
+if(POLICY CMP0167)
+	cmake_policy(SET CMP0167 NEW)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
@@ -52,7 +57,7 @@ option(STATIC_PKGDEPS_LIBS "Statically link to (pkg-config) libraries" FALSE)
 if(WIN32)
 	# On Windows/MinGW we need to statically link to libraries.
 	# This option is user configurable, but enable it by default on win32.
-	# DISABLED: Qt5-static injects -static which conflicts with dynamic GLib linking
+	# DISABLED: Qt6-static injects -static which conflicts with dynamic GLib linking
 	# set(STATIC_PKGDEPS_LIBS TRUE)
 
 	# Windows does not support UNIX signals.
@@ -103,20 +108,11 @@ pkg_check_modules(PKGDEPS REQUIRED ${PKGDEPS})
 
 set(CMAKE_AUTOMOC TRUE)
 
-find_package(Qt5 5.3 COMPONENTS Core Gui LinguistTools Widgets Svg Network REQUIRED)
+find_package(Qt6 6.5 COMPONENTS Core Gui LinguistTools Widgets Svg Network REQUIRED)
 
-message(STATUS "Qt version: ${Qt5_VERSION}")
+message(STATUS "Qt version: ${Qt6_VERSION}")
 
-if(WIN32)
-	# MXE workaround: Use pkg-config to find Qt5 libs.
-	# https://github.com/mxe/mxe/issues/1642
-	# Not required (and doesn't work) on MSYS2.
-	if(NOT DEFINED ENV{MSYSTEM})
-		pkg_check_modules(QT5ALL REQUIRED Qt5Widgets>=5.3 Qt5Gui>=5.3 Qt5Svg>=5.3)
-	endif()
-endif()
-
-set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::Svg Qt5::Network)
+set(QT_LIBRARIES Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Network)
 
 if(WIN32)
 	# MSYS2/MinGW still ships a separate boost_system library
@@ -479,7 +475,7 @@ if(ANDROID)
 	)
 endif()
 
-qt5_add_resources(pulseview_RESOURCES_RCC ${pulseview_RESOURCES})
+qt_add_resources(pulseview_RESOURCES_RCC ${pulseview_RESOURCES})
 
 #===============================================================================
 #= Translations
@@ -491,21 +487,23 @@ if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 	configure_file("translations.qrc" "translations.qrc" COPYONLY)
 endif ()
 
-qt5_add_translation(QM_FILES ${TS_FILES})
+qt_add_translation(QM_FILES ${TS_FILES})
 
-qt5_add_resources(pulseview_RESOURCES_RCC ${CMAKE_BINARY_DIR}/translations.qrc)
+qt_add_resources(pulseview_RESOURCES_RCC ${CMAKE_BINARY_DIR}/translations.qrc)
 
 #===============================================================================
 #= Global Definitions
 #-------------------------------------------------------------------------------
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_definitions(-DQT_NO_KEYWORDS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 add_definitions(-Wall -Wextra)
-add_definitions(-std=c++14)
 add_definitions(-DBOOST_MATH_DISABLE_FLOAT128=1)
 add_definitions(-DGLIBMM_STATIC_COMPILATION -DGLIB_STATIC_COMPILATION)
-add_definitions(-D_HAS_STD_BYTE=0)
 if(WIN32)
 	add_definitions(-Wa,-mbig-obj -O3)
 endif()
@@ -666,15 +664,10 @@ endif()
 if(WIN32)
 	# On Windows we need to statically link the libqsvg imageformat
 	# plugin (and the QtSvg component) for SVG graphics/icons to work.
-	# We also need QWindowsIntegrationPlugin, Qt5PlatformSupport (only for
-	# Qt < 5.8.0), and all Qt libs and their dependencies.
+	# We also need QWindowsIntegrationPlugin.
 	add_definitions(-DQT_STATICPLUGIN)
-	list(APPEND PULSEVIEW_LINK_LIBS Qt5::QSvgPlugin)
-	list(APPEND PULSEVIEW_LINK_LIBS Qt5::QWindowsIntegrationPlugin)
-	if(Qt5Gui_VERSION VERSION_LESS 5.8.0)
-		list(APPEND PULSEVIEW_LINK_LIBS -lQt5PlatformSupport)
-	endif()
-	list(APPEND PULSEVIEW_LINK_LIBS ${QT5ALL_LDFLAGS})
+	list(APPEND PULSEVIEW_LINK_LIBS Qt6::QSvgPlugin)
+	list(APPEND PULSEVIEW_LINK_LIBS Qt6::QWindowsIntegrationPlugin)
 	# Add hidapi for IAP dialog
 	list(APPEND PULSEVIEW_LINK_LIBS -lhidapi -lsetupapi -lusb-1.0 -ldwmapi)
 endif()

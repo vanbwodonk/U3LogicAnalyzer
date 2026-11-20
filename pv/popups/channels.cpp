@@ -344,8 +344,8 @@ void Channels::init_ui()
 	populate_group(nullptr, global_logic_sigs);
 	populate_group(nullptr, global_analog_sigs);
 
-	connect(&check_box_mapper_, SIGNAL(mapped(QWidget*)),
-		this, SLOT(on_channel_checked(QWidget*)));
+	connect(&check_box_mapper_, SIGNAL(mappedObject(QObject*)),
+		this, SLOT(on_channel_checked(QObject*)));
 
 	init_channel_state();
 
@@ -1365,7 +1365,7 @@ void Channels::checkbox_toggled(bool state)
 	}
 }
 
-void Channels::on_channel_checked(QWidget* widget)
+void Channels::on_channel_checked(QObject* widget)
 {
 	if (updating_channels_) {
 		return;

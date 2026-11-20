@@ -215,7 +215,8 @@ void GlobalSettings::apply_theme()
 
 	if (!resource_name.isEmpty()) {
 		QFile file(resource_name);
-		file.open(QFile::ReadOnly | QFile::Text);
+		if (!file.open(QFile::ReadOnly | QFile::Text))
+			qWarning() << "Could not open theme file" << resource_name;
 		qApp->setStyleSheet(file.readAll());
 	} else
 		qApp->setStyleSheet("");
@@ -337,7 +338,7 @@ void GlobalSettings::store_gvariant(QSettings &settings, GVariant *v)
 		g_variant_get_size(v));
 
 	settings.setValue("value", var_data);
-	settings.setValue("type", var_type_str);
+	settings.setValue("type", QString::fromUtf8(var_type_str));
 
 	g_free(var_type_str);
 }

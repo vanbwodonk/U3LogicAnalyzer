@@ -21,6 +21,7 @@
 #define ENABLE_DECODE
 #include <extdef.h>
 #include <QApplication>
+#include <QStyle>
 #include "config.h"
 #include "pv/application.hpp"
 #include <algorithm>
@@ -274,7 +275,7 @@ namespace pv
 
 			action_open_->setText(tr("&Open..."));
 			action_open_->setIcon(QIcon(":/icons/folder-open.svg"));
-			action_open_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+			action_open_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
 			connect(action_open_, SIGNAL(triggered(bool)),
 					this, SLOT(on_actionOpen_triggered()));
 
@@ -284,7 +285,7 @@ namespace pv
 
 			action_save_->setText(tr("Save"));
 			action_save_->setIcon(QIcon(":/icons/save.svg"));
-			action_save_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+			action_save_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
 			connect(action_save_, SIGNAL(triggered(bool)),
 					this, SLOT(on_actionSave_triggered()));
 
@@ -297,7 +298,7 @@ namespace pv
 			action_save_selection_as_->setText(tr("Save Selected &Range As..."));
 			action_save_selection_as_->setIcon(QIcon::fromTheme("document-save-as",
 																QIcon(":/icons/document-save-as.png")));
-			action_save_selection_as_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+			action_save_selection_as_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
 			connect(action_save_selection_as_, SIGNAL(triggered(bool)),
 					this, SLOT(on_actionSaveSelectionAs_triggered()));
 
@@ -1803,7 +1804,7 @@ namespace pv
 
 			// 创建图标标签
 			QLabel *iconLabel = new QLabel(&dialog);
-			iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Warning));
+			iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(32, 32));
 			iconLabel->setAlignment(Qt::AlignTop);
 			contentLayout->addWidget(iconLabel);
 
@@ -2451,7 +2452,7 @@ namespace pv
 
 				// 创建图标标签
 				QLabel *iconLabel = new QLabel(&dialog);
-				iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Information));
+				iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(32, 32));
 				iconLabel->setAlignment(Qt::AlignTop);
 				contentLayout->addWidget(iconLabel);
 
@@ -2591,7 +2592,7 @@ namespace pv
 
 				// 创建图标标签
 				QLabel *iconLabel = new QLabel(&dialog);
-				iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Warning));
+				iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(32, 32));
 				iconLabel->setAlignment(Qt::AlignTop);
 				contentLayout->addWidget(iconLabel);
 
@@ -2677,7 +2678,7 @@ namespace pv
 
 					// 创建图标标签
 					QLabel *iconLabel = new QLabel(&dialog);
-					iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Critical));
+					iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical).pixmap(32, 32));
 					iconLabel->setAlignment(Qt::AlignTop);
 					contentLayout->addWidget(iconLabel);
 
@@ -2743,7 +2744,7 @@ namespace pv
 
 				// 创建图标标签
 				QLabel *iconLabel = new QLabel(&dialog);
-				iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Information));
+				iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(32, 32));
 				iconLabel->setAlignment(Qt::AlignTop);
 				contentLayout->addWidget(iconLabel);
 
@@ -2794,7 +2795,7 @@ namespace pv
 
 				// 创建图标标签
 				QLabel *iconLabel = new QLabel(&dialog);
-				iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Warning));
+				iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(32, 32));
 				iconLabel->setAlignment(Qt::AlignTop);
 				contentLayout->addWidget(iconLabel);
 
@@ -2921,7 +2922,7 @@ namespace pv
 
 					// 创建图标标签
 					QLabel *iconLabel = new QLabel(dialog);
-					iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Information));
+					iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(32, 32));
 					iconLabel->setAlignment(Qt::AlignTop);
 					contentLayout->addWidget(iconLabel);
 

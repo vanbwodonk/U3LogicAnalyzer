@@ -81,7 +81,7 @@ DeviceToolButton::DeviceToolButton(QWidget *parent,
 		"QMenu#deviceMenu::item:selected { background: #343943; color: #ffffff; }"
 	);
 
-	connect(&mapper_, SIGNAL(mapped(QObject*)),
+	connect(&mapper_, SIGNAL(mappedObject(QObject*)),
 		this, SLOT(on_action(QObject*)));
 
 	connect(&menu_, SIGNAL(hovered(QAction*)),

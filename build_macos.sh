@@ -3,7 +3,7 @@
 # build_macos.sh - 在 macOS（或 Linux）上构建 CH32H417 LogicAnalyzer
 #
 # 依赖（Homebrew）:
-#   brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
+#   brew install pkgconf cmake ninja qt glibmm@2.66 glib libusb hidapi \
 #                libserialport libftdi nettle libzip boost python@3.14
 #
 # 源码获取: libsigrok / libsigrokdecode 随仓库分发（仓库内置）。
@@ -92,7 +92,7 @@ fi
 EXTRA_PKGCONFIG=""
 EXTRA_CMAKE_PREFIX=""
 if [ "$(uname -s)" = "Darwin" ]; then
-    for p in /opt/homebrew/opt/qt@5 /opt/homebrew/opt/glibmm@2.66; do
+    for p in /opt/homebrew/opt/qt /opt/homebrew/opt/glibmm@2.66; do
         if [ -d "$p" ]; then
             EXTRA_PKGCONFIG="$EXTRA_PKGCONFIG:$p/lib/pkgconfig"
             EXTRA_CMAKE_PREFIX="$EXTRA_CMAKE_PREFIX;$p"

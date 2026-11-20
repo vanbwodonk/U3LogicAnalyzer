@@ -32,6 +32,7 @@
 #include <pv/session.hpp>
 
 #include <QPainterPath>
+#include <QInputDevice>
 #include <QMouseEvent>
 #include <QScreen>
 #include <QWindow>
@@ -133,31 +134,32 @@ vector< shared_ptr<ViewItem> > Viewport::items()
 
 bool Viewport::touch_event(QTouchEvent *event)
 {
-	QList<QTouchEvent::TouchPoint> touchPoints = event->touchPoints();
+	const QList<QEventPoint> touchPoints = event->points();
 
 	if (touchPoints.count() != 2) {
 		pinch_zoom_active_ = false;
 		return false;
 	}
-	if (event->device()->type() == QTouchDevice::TouchPad) {
+	if (event->device() &&
+		event->device()->type() == QInputDevice::DeviceType::TouchPad) {
 		return false;
 	}
 
-	const QTouchEvent::TouchPoint &touchPoint0 = touchPoints.first();
-	const QTouchEvent::TouchPoint &touchPoint1 = touchPoints.last();
+	const QEventPoint &touchPoint0 = touchPoints.first();
+	const QEventPoint &touchPoint1 = touchPoints.last();
 
 	if (!pinch_zoom_active_ ||
 	    (event->touchPointStates() & Qt::TouchPointPressed)) {
-		pinch_offset0_ = (view_.offset() + view_.scale() * touchPoint0.pos().x()).convert_to<double>();
-		pinch_offset1_ = (view_.offset() + view_.scale() * touchPoint1.pos().x()).convert_to<double>();
+		pinch_offset0_ = (view_.offset() + view_.scale() * touchPoint0.position().x()).convert_to<double>();
+		pinch_offset1_ = (view_.offset() + view_.scale() * touchPoint1.position().x()).convert_to<double>();
 		pinch_zoom_active_ = true;
 	}
 
-	double w = touchPoint1.pos().x() - touchPoint0.pos().x();
+	double w = touchPoint1.position().x() - touchPoint0.position().x();
 	if (abs(w) >= 1.0) {
 		const double scale =
 			fabs((pinch_offset1_ - pinch_offset0_) / w);
-		double offset = pinch_offset0_ - touchPoint0.pos().x() * scale;
+		double offset = pinch_offset0_ - touchPoint0.position().x() * scale;
 		if (scale > 0)
 			view_.set_scale_offset(scale, offset);
 	}
@@ -171,7 +173,7 @@ bool Viewport::touch_event(QTouchEvent *event)
 		} else {
 			// Update the mouse down fields so that continued
 			// dragging with the primary touch will work correctly
-			mouse_down_point_ = touchPoint0.pos().toPoint();
+			mouse_down_point_ = touchPoint0.position().toPoint();
 			drag();
 		}
 	}
@@ -351,9 +353,11 @@ void Viewport::wheelEvent(QWheelEvent *event)
 {
 	assert(event);
 
-	int delta = event->delta();
+	const QPoint angle_delta = event->angleDelta();
+	const int delta = angle_delta.y() != 0 ? angle_delta.y() : angle_delta.x();
+	const bool vertical = qAbs(angle_delta.y()) >= qAbs(angle_delta.x());
 
-	if (event->orientation() == Qt::Vertical) {
+	if (vertical) {
 		if (event->modifiers() & Qt::ControlModifier) {
 			// Vertical scrolling with the control key pressed
 			// is intrepretted as vertical scrolling
@@ -363,9 +367,9 @@ void Viewport::wheelEvent(QWheelEvent *event)
 			// Vertical scrolling is interpreted as zooming in/out
 			double steps = delta / 250.0;
 			double scale = view_.scale() * pow(2.0, -steps);
-			pv::util::Timestamp cursor_offset = view_.offset() + view_.scale() * event->x();
+			pv::util::Timestamp cursor_offset = view_.offset() + view_.scale() * event->position().x();
 			pv::util::Timestamp new_scale = std::max(std::min(scale, view_.current_max_scale_), 1e-12);
-			pv::util::Timestamp new_offset = cursor_offset - new_scale * event->x();
+			pv::util::Timestamp new_offset = cursor_offset - new_scale * event->position().x();
 			new_offset = std::max(0.00, std::min((double)(view_.current_max_offset_ - new_scale * view_.viewport_width()), (double)new_offset));
 
 			// if ((double)new_offset + new_scale * view_.viewport_width() > view_.current_max_offset_){
@@ -376,7 +380,7 @@ void Viewport::wheelEvent(QWheelEvent *event)
 			// }
 			view_.set_scale_offset((double)new_scale, new_offset);
 		}
-	} else if (event->orientation() == Qt::Horizontal) {
+	} else {
 		// Horizontal scrolling is interpreted as moving left/right
 		view_.set_scale_offset(view_.scale(),
 			delta * view_.scale() + view_.offset());

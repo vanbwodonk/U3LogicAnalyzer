@@ -70,7 +70,7 @@ for cmd in cmake pkg-config gcc g++; do
     command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 done
 
-for module in Qt5Core Qt5Gui Qt5Widgets Qt5Svg Qt5Network glib-2.0 glibmm-2.4 libusb-1.0; do
+for module in Qt6Core Qt6Gui Qt6Widgets Qt6Svg Qt6Network glib-2.0 glibmm-2.4 libusb-1.0; do
     pkg-config --exists "$module" 2>/dev/null || missing+=("pkg-config:$module")
 done
 
@@ -99,13 +99,13 @@ if [[ ${#missing[@]} -gt 0 ]]; then
     printf '  - %s\n' "${missing[@]}" >&2
     echo "" >&2
     echo "Arch Linux:" >&2
-    echo "  sudo pacman -S --needed base-devel cmake ninja pkgconf qt5-base qt5-svg \\" >&2
-    echo "      qt5-tools glib2 glibmm libusb hidapi libzip boost libserialport \\" >&2
+    echo "  sudo pacman -S --needed base-devel cmake ninja pkgconf qt6-base qt6-svg \\" >&2
+    echo "      qt6-tools glib2 glibmm libusb hidapi libzip boost libserialport \\" >&2
     echo "      libftdi nettle bluez-libs zlib python" >&2
     echo "" >&2
     echo "Debian/Ubuntu:" >&2
     echo "  sudo apt install build-essential cmake ninja-build pkg-config \\" >&2
-    echo "      qtbase5-dev qttools5-dev libqt5svg5-dev libglib2.0-dev \\" >&2
+    echo "      qt6-base-dev qt6-tools-dev qt6-l10n-tools libqt6svg6-dev libglib2.0-dev \\" >&2
     echo "      libglibmm-2.4-dev libusb-1.0-0-dev libserialport-dev libftdi1-dev \\" >&2
     echo "      libnettle-dev libieee1284-3-dev libbluetooth-dev libhidapi-dev \\" >&2
     echo "      libzip-dev libboost-dev libboost-filesystem-dev \\" >&2

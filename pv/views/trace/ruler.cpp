@@ -249,7 +249,7 @@ void Ruler::on_add_RuleFlag(QMouseEvent* ev)
 
 void Ruler::mouseDoubleClickEvent(QMouseEvent *event)
 {
-	hover_item_ = view_.add_flag(get_absolute_time_from_x_pos(event->x()));
+	hover_item_ = view_.add_flag(get_absolute_time_from_x_pos(event->position().x()));
 }
 
 void Ruler::paintEvent(QPaintEvent*)

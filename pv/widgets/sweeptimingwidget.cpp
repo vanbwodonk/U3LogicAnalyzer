@@ -67,7 +67,7 @@ SweepTimingWidget::SweepTimingWidget(const char *suffix,
 		this, SIGNAL(value_changed()));
 
 	setLayout(&layout_);
-	layout_.setMargin(0);
+	layout_.setContentsMargins(0, 0, 0, 0);
 	layout_.setSpacing(0);
 	layout_.addWidget(&prefix_);
 	layout_.addWidget(&list_);

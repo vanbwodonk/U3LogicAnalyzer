@@ -81,7 +81,7 @@ U3LogicAnalyzer/
 macOS（Homebrew）：
 
 ```bash
-brew install pkgconf cmake ninja qt@5 glibmm@2.66 glib libusb hidapi \
+brew install pkgconf cmake ninja qt glibmm@2.66 glib libusb hidapi \
              libserialport libftdi nettle libzip boost python@3.14
 ```
 
@@ -89,7 +89,7 @@ Linux（Debian/Ubuntu 示例，包名以发行版为准）：
 
 ```bash
 sudo apt install build-essential cmake ninja-build pkg-config \
-  qtbase5-dev qttools5-dev libqt5svg5-dev \
+  qt6-base-dev qt6-tools-dev qt6-l10n-tools libqt6svg6-dev \
   libglib2.0-dev libglibmm-2.4-dev libusb-1.0-0-dev \
   libhidapi-dev libzip-dev libboost-dev libboost-filesystem-dev \
   libboost-serialization-dev python3-dev
@@ -143,7 +143,7 @@ cd U3LogicAnalyzer
 open build/U3LogicAnalyzer.dmg   # 打开后拖到 Applications 即完成安装
 ```
 
-`build/U3LogicAnalyzer.app` 完全自包含（Qt5 框架、sigrok 库及其全部依赖、
+`build/U3LogicAnalyzer.app` 完全自包含（Qt6 框架、sigrok 库及其全部依赖、
 Python 运行时、130 个解码器、应用图标），可在 Finder 中双击运行。
 `build/U3LogicAnalyzer.dmg`（约 70-80MB）内含 app 和 /Applications 快捷链接。
 
@@ -170,7 +170,7 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 - 推送 `v*` 标签（如 `git tag v1.1 && git push origin v1.1`）：构建后自动创建
   GitHub Release，附带三个平台的安装包：
   - `U3LogicAnalyzer.dmg`（macOS 安装镜像，拖拽安装）
-  - `U3LogicAnalyzer-linux.tar.gz`（Linux 二进制 + 解码器，需系统 Qt5/glib 等依赖）
+  - `U3LogicAnalyzer-linux.tar.gz`（Linux 二进制 + 解码器，需系统 Qt6/glib 等依赖）
   - `LogicAnalyzer-win64.zip`（Windows 免安装包：exe + DLL + 解码器 + run.bat）
 
 ## 已知限制
@@ -231,7 +231,7 @@ cd build_cmake/logicanalyzer_build && ./LogicAnalyzer.exe   # 运行
 - **插上设备但扫描不到？** 先 `./LogicAnalyzer -l 5` 看日志；macOS/Linux 下
   驱动为 libusb 传输层，确认 `lsusb`/`system_profiler SPUSBDataType` 能看到
   1a86:5537。
-- **打包后无法启动？** 确认使用的是 qt@5 的 macdeployqt（脚本已固定），且
+- **打包后无法启动？** 确认使用的是 Qt6 的 macdeployqt（脚本已固定），且
   机器上没有残留的旧 `build/LogicAnalyzer.app`。
 
 ## 版权与许可

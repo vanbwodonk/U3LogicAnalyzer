@@ -7,7 +7,7 @@
 #       mingw-w64-x86_64-{gcc,cmake,ninja,pkgconf,gdb} \
 #       mingw-w64-x86_64-{glib2,glibmm,libusb,hidapi,libzip} \
 #       mingw-w64-x86_64-{libserialport,libftdi,nettle} \
-#       mingw-w64-x86_64-{boost,qt5,python,zip}
+#       mingw-w64-x86_64-{boost,qt6-base,qt6-svg,qt6-tools,python,zip}
 #
 # 产物: build/LogicAnalyzer-win64.zip
 #
@@ -146,6 +146,17 @@ for dll in \
     cp "$PREFIX/bin/$dll" "$PVDIR/" 2>/dev/null || \
     cp "/mingw64/bin/$dll" "$PVDIR/" 2>/dev/null || true
 done
+
+# Deploy the Qt runtime (DLLs + platform/imageformat plugins). MSYS2 ships
+# the Qt6 tool as windeployqt-qt6 (windeployqt6 on some Qt installers); keep
+# plain windeployqt as a last resort.
+if command -v windeployqt-qt6 >/dev/null 2>&1; then
+    windeployqt-qt6 --no-translations "$PVDIR/LogicAnalyzer.exe" || true
+elif command -v windeployqt6 >/dev/null 2>&1; then
+    windeployqt6 --no-translations "$PVDIR/LogicAnalyzer.exe" || true
+elif command -v windeployqt >/dev/null 2>&1; then
+    windeployqt --no-translations "$PVDIR/LogicAnalyzer.exe" || true
+fi
 
 cp -R "$PREFIX/share/libsigrokdecode/decoders" "$PVDIR/decoders"
 mkdir -p "$PVDIR/sigrok-firmware"

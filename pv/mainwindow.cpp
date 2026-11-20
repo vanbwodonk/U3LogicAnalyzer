@@ -32,6 +32,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QStyle>
 #include <QCloseEvent>
 #include <QDebug>
 #include <QDockWidget>
@@ -134,7 +135,7 @@ bool MainWindow::checkSystemRequirements()
 
 		// 创建图标标签
 		QLabel *iconLabel = new QLabel(&dialog);
-		iconLabel->setPixmap(QMessageBox::standardIcon(QMessageBox::Information));
+		iconLabel->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(32, 32));
 		iconLabel->setAlignment(Qt::AlignTop);
 		contentLayout->addWidget(iconLabel);
 
@@ -384,7 +385,7 @@ void MainWindow::setup_application_menu(MainBar *main_bar)
 	menu_device_->addAction(main_bar->action_device_options());
 	action_trigger_option_ = menu_device_->addAction(tr("Trigger Option"));
 	action_trigger_option_->setIcon(QIcon(":/icons/trigger-change.svg"));
-	action_trigger_option_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_T));
+	action_trigger_option_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
 	action_trigger_option_->setStatusTip(
 		tr("Configure simple or advanced trigger settings"));
 	connect(action_trigger_option_, &QAction::triggered,
@@ -1086,10 +1087,10 @@ void MainWindow::setup_ui()
 	session_selector_.tabBar()->setVisible(false);  // hidden session 1
 	// session_selector_.setCornerWidget(static_tab_widget_, Qt::TopLeftCorner);
 	session_selector_.setTabsClosable(false);
-	close_application_shortcut_ = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
+	close_application_shortcut_ = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q), this, SLOT(close()));
 	close_application_shortcut_->setAutoRepeat(false);
 
-	close_current_tab_shortcut_ = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), this, SLOT(on_close_current_tab()));
+	close_current_tab_shortcut_ = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_W), this, SLOT(on_close_current_tab()));
 
 	
 	// connect(new_session_button_, SIGNAL(clicked(bool)),

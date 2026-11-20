@@ -23,8 +23,9 @@
 #include <cassert>
 
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QGuiApplication>
 #include <QLineEdit>
+#include <QScreen>
 #include <QScrollBar>
 #include <QStyle>
 #include <QtGui>
@@ -253,8 +254,10 @@ void Popup::reposition_widget()
 {
 	QPoint o;
 
-	const QRect screen_rect = QApplication::desktop()->availableGeometry(
-		QApplication::desktop()->screenNumber(point_));
+	QScreen *screen = QGuiApplication::screenAt(point_);
+	if (!screen)
+		screen = QGuiApplication::primaryScreen();
+	const QRect screen_rect = screen->availableGeometry();
 
 	if (pos_ == Right || pos_ == Left)
 		o.ry() = -height() / 2;

@@ -20,8 +20,8 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/vanbwodonk/U3LogicAnalyzer"
 license=('GPL-3.0-or-later')
 depends=(
-    'qt5-base'
-    'qt5-svg'
+    'qt6-base'
+    'qt6-svg'
     'glib2'
     'glibmm'
     'libusb'
@@ -42,7 +42,7 @@ makedepends=(
     'ninja'
     'pkgconf'
     'boost'
-    'qt5-tools'
+    'qt6-tools'
 )
 optdepends=(
 )

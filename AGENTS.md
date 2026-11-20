@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## What this project is
 
-U3LogicAnalyzer is a Qt5 desktop application for WCH CH32H417 / CH569 USB
+U3LogicAnalyzer is a Qt6 desktop application for WCH CH32H417 / CH569 USB
 logic analyzers. It is a fork of PulseView 0.5.0 with a bundled sigrok stack
 vendored in-tree:
 
@@ -52,8 +52,8 @@ Windows: run `./build_windows.sh` from an MSYS2 **MINGW64** shell. Output:
 macOS packaging (macOS only): `./package_app.sh` creates
 `build/U3LogicAnalyzer.app`; `--dmg` also creates `build/U3LogicAnalyzer.dmg`.
 
-Dependencies: CMake (≥3.10 for the bundled libraries), a C++14 compiler, Qt5
-(Widgets, Gui, Svg, Network, LinguistTools), glib/glibmm-2.4, Boost
+Dependencies: CMake (≥3.21 for the app, ≥3.10 for the bundled libraries), a
+C++17 compiler, Qt6 (Widgets, Gui, Svg, Network, LinguistTools), glib/glibmm-2.4, Boost
 (filesystem, serialization), libusb, hidapi, libzip, and Python 3 development
 files. For the full driver set also install libserialport, libftdi1, nettle,
 libieee1284, and libbluetooth (BlueZ); CMake excludes drivers whose optional
@@ -139,9 +139,9 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - User-visible strings go through `tr()`. Translations live in `l10n/*.ts`
   (`zh_cn.ts` is the Chinese translation and `en.ts` translates the
   Chinese-origin strings for English/fallback UI). The build only runs
-  `lrelease` (`qt5_add_translation`); run `lupdate` manually after changing
-  strings and fill new entries. Do not re-enable `qt5_create_translation`,
-  which rewrites the `.ts` files during builds.
+  `lrelease` (`qt_add_translation`); run `lupdate` manually after changing
+  strings and fill new entries. Do not use `qt_add_translations()` (plural),
+  which runs `lupdate` and rewrites the `.ts` files during builds.
 - New `Q_OBJECT` headers must be added to the `pulseview_HEADERS` list (and to
   the parallel test lists) so AUTOMOC processes them; add new sources to
   `pulseview_SOURCES`.
@@ -212,8 +212,8 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 - `pv/dialogs/iapdialog.cpp` performs IAP work on a `QThread`. Widget/dialog
   access (including the completion dialog) must be marshalled to the GUI
   thread; touching UI from the worker can crash.
-- On macOS, `package_app.sh` must use the `qt@5` `macdeployqt`; a Qt6
-  `macdeployqt` on `PATH` bundles the wrong frameworks.
+- On macOS, `package_app.sh` must use the Qt6 `macdeployqt`
+  (`/opt/homebrew/opt/qt/bin/macdeployqt`); the script pins that path.
 - CI runs `build_macos.sh` on Linux as well, so keep it portable. Releases are
   published only for `v*` tags; do not tag or push unless asked.
 - Firmware is built with MounRiver Studio (RISC-V toolchain), not CMake.

@@ -204,13 +204,10 @@ int main(int argc, char *argv[])
 	Srf::init();
 #endif
 
-	// Enable high DPI scaling before creating QApplication
-	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
-	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+	// High DPI scaling is always enabled in Qt6. Keep the same rounding
+	// policy the Qt5 build used for comparable geometry on scaled displays.
 	QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
 		Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
-#endif
 
 	Application a(argc, argv);
 #ifdef _WIN32

@@ -190,14 +190,14 @@ DecodeTrace::DecodeTrace(pv::Session &session,
 	connect(decode_signal_.get(), SIGNAL(channels_updated()),
 		this, SLOT(on_channels_updated()));
 
-	connect(&delete_mapper_, SIGNAL(mapped(int)),
+	connect(&delete_mapper_, SIGNAL(mappedInt(int)),
 		this, SLOT(on_delete_decoder(int)));
-	connect(&show_hide_mapper_, SIGNAL(mapped(int)),
+	connect(&show_hide_mapper_, SIGNAL(mappedInt(int)),
 		this, SLOT(on_show_hide_decoder(int)));
-	connect(&row_show_hide_mapper_, SIGNAL(mapped(int)),
+	connect(&row_show_hide_mapper_, SIGNAL(mappedInt(int)),
 		this, SLOT(on_show_hide_row(int)));
-	connect(&class_show_hide_mapper_, SIGNAL(mapped(QWidget*)),
-		this, SLOT(on_show_hide_class(QWidget*)));
+	connect(&class_show_hide_mapper_, SIGNAL(mappedObject(QObject*)),
+		this, SLOT(on_show_hide_class(QObject*)));
 
 	connect(&delayed_trace_updater_, SIGNAL(timeout()),
 		this, SLOT(on_delayed_trace_update()));
@@ -781,9 +781,9 @@ void DecodeTrace::mouse_left_press_event(const QMouseEvent* event)
 			continue;
 
 		unsigned int y = get_row_y(&r);
-		if ((event->x() > 0) && (event->x() <= (int)(ArrowSize + 3 + r.title_width)) &&
-			(event->y() > (int)(y - (default_row_height_ / 2))) &&
-			(event->y() <= (int)(y + (default_row_height_ / 2)))) {
+		if ((event->position().x() > 0) && (event->position().x() <= (int)(ArrowSize + 3 + r.title_width)) &&
+			(event->position().y() > (int)(y - (default_row_height_ / 2))) &&
+			(event->position().y() <= (int)(y + (default_row_height_ / 2)))) {
 
 			if (r.expanded) {
 				r.collapsing = true;
@@ -1376,14 +1376,14 @@ void DecodeTrace::initialize_row_widgets(DecodeTraceRow* r, unsigned int row_id)
 	QPalette selector_palette = owner_->view()->palette();
 
 	if (GlobalSettings::current_theme_is_dark()) {
-		header_palette.setColor(QPalette::Background,
+		header_palette.setColor(QPalette::Window,
 			QColor(255, 255, 255, ExpansionAreaHeaderAlpha));
-		selector_palette.setColor(QPalette::Background,
+		selector_palette.setColor(QPalette::Window,
 			QColor(255, 255, 255, ExpansionAreaAlpha));
 	} else {
-		header_palette.setColor(QPalette::Background,
+		header_palette.setColor(QPalette::Window,
 			QColor(0, 0, 0, ExpansionAreaHeaderAlpha));
-		selector_palette.setColor(QPalette::Background,
+		selector_palette.setColor(QPalette::Window,
 			QColor(0, 0, 0, ExpansionAreaAlpha));
 	}
 
@@ -1749,15 +1749,17 @@ void DecodeTrace::on_show_hide_row(int row_id)
 	owner_->row_item_appearance_changed(false, true);
 }
 
-void DecodeTrace::on_show_hide_class(QWidget* sender)
+void DecodeTrace::on_show_hide_class(QObject* sender)
 {
-	void* ann_class_ptr = sender->property("ann_class_ptr").value<void*>();
+	QWidget* widget = qobject_cast<QWidget*>(sender);
+	assert(widget);
+	void* ann_class_ptr = widget->property("ann_class_ptr").value<void*>();
 	assert(ann_class_ptr);
 	AnnotationClass* ann_class = (AnnotationClass*)ann_class_ptr;
 
 	ann_class->set_visible(!ann_class->visible());
 
-	void* row_ptr = sender->property("decode_trace_row_ptr").value<void*>();
+	void* row_ptr = widget->property("decode_trace_row_ptr").value<void*>();
 	assert(row_ptr);
 	DecodeTraceRow* row = (DecodeTraceRow*)row_ptr;
 
