@@ -55,6 +55,15 @@ source=(
 )
 sha256sums=('SKIP' 'SKIP')
 
+prepare() {
+    cd "$srcdir/$pkgname"
+    # A VCS package must build the latest pushed revision. makepkg keeps an
+    # existing checkout and otherwise reuses stale files, which previously
+    # produced binaries missing recent fixes.
+    git fetch --quiet origin
+    git reset --hard --quiet origin/master
+}
+
 pkgver() {
     cd "$srcdir/$pkgname"
     if git describe --tags --long >/dev/null 2>&1; then
