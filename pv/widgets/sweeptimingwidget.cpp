@@ -1,4 +1,5 @@
 /*
+#include <cmath>
  * This file is part of the LogicAnalyzer project.
  * LogicAnaylzer is based on Pulseview.
  *
