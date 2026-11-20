@@ -17,13 +17,13 @@ The PKGBUILD builds:
 
 Because the patched sigrok libraries are installed into `/usr/lib`, this
 package conflicts with the distribution's `libsigrok` / `libsigrokdecode`
-packages. Install `sigrok-firmware-fx2lafw` separately if you use FX2LAFW /
-Saleae Logic hardware.
+packages. FX2LAFW/Saleae firmware is bundled, so no separate
+`sigrok-firmware-fx2lafw` package is required.
 
 ## DreamSourceLab DSLogic firmware
 
-DSView is **not** required. All supported DreamSourceLab firmware is bundled
-in the project under `firmware/dreamsourcelab/` and is installed to
+DSView and `sigrok-firmware-fx2lafw` are **not** required. DreamSourceLab and
+FX2LAFW firmware is bundled under `firmware/` and installed to
 `/usr/share/sigrok-firmware` by the application CMake install rules.
 
 ## USB access (udev)

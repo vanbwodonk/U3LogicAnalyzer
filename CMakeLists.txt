@@ -750,6 +750,16 @@ install(FILES firmware/dreamsourcelab/LICENSE
     RENAME dreamsourcelab-firmware-LICENSE
 )
 
+# FX2LAFW firmware for Saleae Logic and other Cypress FX2 analyzers.
+install(DIRECTORY firmware/fx2lafw/
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/sigrok-firmware
+    FILES_MATCHING PATTERN "*.fw"
+)
+install(FILES firmware/fx2lafw/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/U3LogicAnalyzer
+    RENAME fx2lafw-firmware-LICENSE
+)
+
 # USB access rules for libsigrok hardware (DreamSourceLab, Saleae, etc.).
 # Arch uses systemd-logind uaccess ACLs; install the generic + uaccess rules.
 if(UNIX AND NOT APPLE)

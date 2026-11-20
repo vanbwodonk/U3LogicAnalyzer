@@ -14,7 +14,8 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - CH32H417 (USB 3.0, up to 200 MHz sampling) and CH569 hot-plug detection
 - Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
   DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
-- Bundled DreamSourceLab firmware (no separate DSView installation needed)
+- Bundled DreamSourceLab and FX2LAFW firmware (no DSView or
+  `sigrok-firmware-fx2lafw` package needed)
 - Hardware-aware Device Options: voltage threshold (DSLogic: 0.0-5.0 V in
   0.1 V steps), Buffer/Stream mode, RLE, capture ratio, external clock and
   clock edge
@@ -165,8 +166,9 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
   `SIGROKDECODE_DIR` and restart.
 - Device not found? Run with `-l 5`; on macOS/Linux the driver uses libusb -
   confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
-  analyzers also need the `sigrok-firmware-fx2lafw` firmware files installed
-  (or `SIGROK_FIRMWARE_DIR` set).
+  analyzers use the bundled firmware; if you run a build from an unusual
+  location, set `SIGROK_FIRMWARE_DIR` to the installed `sigrok-firmware`
+  directory.
 - DSLogic is not detected on Linux and the log says `LIBUSB_ERROR_ACCESS`?
   USB access requires udev rules. The AUR package installs them to
   `/usr/lib/udev/rules.d/60-libsigrok.rules` and

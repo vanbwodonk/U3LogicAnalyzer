@@ -169,7 +169,8 @@ cmake --install "$BUILD_DIR/libsigrok_build"
 FW_DIR="$PREFIX/share/sigrok-firmware"
 mkdir -p "$FW_DIR"
 cp -f "$ROOT_DIR"/firmware/dreamsourcelab/*.fw "$FW_DIR"/
-echo "[ok] DreamSourceLab firmware installed from firmware/dreamsourcelab"
+cp -f "$ROOT_DIR"/firmware/fx2lafw/*.fw "$FW_DIR"/
+echo "[ok] DreamSourceLab and FX2LAFW firmware installed"
 
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 export CMAKE_PREFIX_PATH="$PREFIX${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"

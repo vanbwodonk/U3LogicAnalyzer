@@ -14,8 +14,8 @@ vendored in-tree:
   etc.) plus the U3 `wch-ch32h417` driver.
 - `libsigrokdecode/` — libsigrokdecode `0.6.0` with 130 Python decoders.
 - `firmware/` — MounRiver Studio projects (CH32H417 APP/IAP, V3F/V5F) and
-  prebuilt images; the `firmware/dreamsourcelab/` subtree contains the
-  bundled DreamSourceLab firmware and is installed by CMake.
+  prebuilt images; `firmware/dreamsourcelab/` and `firmware/fx2lafw/` contain
+  bundled DSLogic and FX2LAFW firmware installed by CMake.
 - `build_macos.sh`, `build_linux.sh`, `build_windows.sh`, `package_app.sh` —
   supported build and packaging entry points. `build_linux.sh` is the
   Linux-only helper (release/debug, separate `build/linux` tree).
@@ -57,8 +57,8 @@ Dependencies: CMake (≥3.10 for the bundled libraries), a C++14 compiler, Qt5
 files. For the full driver set also install libserialport, libftdi1, nettle,
 libieee1284, and libbluetooth (BlueZ); CMake excludes drivers whose optional
 dependency is unavailable. Boost.Test (`libboost-test-dev`) is needed only for
-tests. FX2LAFW devices additionally need the `sigrok-firmware-fx2lafw`
-firmware files (`SIGROK_FIRMWARE_DIR` overrides the search path).
+tests. FX2LAFW and DSLogic firmware are bundled in `firmware/` and installed
+to `share/sigrok-firmware` (`SIGROK_FIRMWARE_DIR` overrides the search path).
 
 ### Manual CMake
 
@@ -174,7 +174,7 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   `<app>/../../install/share/libsigrokdecode/decoders`. If the binary is
   elsewhere, set `SIGROKDECODE_DIR`. `build_macos.sh --run` and the Windows
   `run.bat` do this for you.
-- FX2LAFW analyzers need firmware from `sigrok-firmware-fx2lafw`. The app was
+- FX2LAFW analyzers use the bundled `firmware/fx2lafw/` images. The app was
   verified end-to-end with a Saleae Logic (`0925:3881`); after upload the
   device re-enumerates as a sigrok FX2LAFW device.
 - The DreamSourceLab DSLogic driver includes the API v2 support from libsigrok

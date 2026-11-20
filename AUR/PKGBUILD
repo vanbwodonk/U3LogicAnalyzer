@@ -45,7 +45,6 @@ makedepends=(
     'qt5-tools'
 )
 optdepends=(
-    'sigrok-firmware-fx2lafw: firmware for FX2LAFW / Saleae Logic analyzers'
 )
 provides=('libsigrok=0.6.0' 'libsigrokdecode=0.6.0' 'libsigrokcxx=0.6.0')
 conflicts=('libsigrok' 'libsigrokdecode' 'libsigrokcxx')
@@ -163,20 +162,22 @@ package() {
     # Bundled DreamSourceLab firmware. Prefer the copy in the checked-out
     # source tree; fall back to the firmware directory next to this PKGBUILD
     # so local AUR copies work even before the firmware is pushed upstream.
-    local fw_src=""
-    for fw_dir in "$srcdir/$pkgname/firmware/dreamsourcelab" \
-                  "$startdir/firmware/dreamsourcelab"; do
-        if [[ -d "$fw_dir" ]]; then
-            fw_src="$fw_dir"
-            break
+    for fw_name in dreamsourcelab fx2lafw; do
+        local fw_src=""
+        for fw_dir in "$srcdir/$pkgname/firmware/$fw_name" \
+                      "$startdir/firmware/$fw_name"; do
+            if [[ -d "$fw_dir" ]]; then
+                fw_src="$fw_dir"
+                break
+            fi
+        done
+        if [[ -n "$fw_src" ]]; then
+            install -d "$pkgdir/usr/share/sigrok-firmware"
+            install -m644 "$fw_src"/*.fw "$pkgdir/usr/share/sigrok-firmware/"
+            install -Dm644 "$fw_src/LICENSE" \
+                "$pkgdir/usr/share/licenses/$pkgname/$fw_name-firmware-LICENSE"
         fi
     done
-    if [[ -n "$fw_src" ]]; then
-        install -d "$pkgdir/usr/share/sigrok-firmware"
-        install -m644 "$fw_src"/*.fw "$pkgdir/usr/share/sigrok-firmware/"
-        install -Dm644 "$fw_src/LICENSE" \
-            "$pkgdir/usr/share/licenses/$pkgname/dreamsourcelab-firmware-LICENSE"
-    fi
 
     install -Dm644 COPYING \
         "$pkgdir/usr/share/licenses/$pkgname/COPYING"

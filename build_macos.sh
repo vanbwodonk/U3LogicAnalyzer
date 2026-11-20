@@ -124,6 +124,7 @@ cmake --build "$BUILD_DIR/libsigrok_build" -j"$JOBS"
 cmake --install "$BUILD_DIR/libsigrok_build"
 mkdir -p "$PREFIX/share/sigrok-firmware"
 cp -f "$SCRIPT_DIR"/firmware/dreamsourcelab/*.fw "$PREFIX/share/sigrok-firmware"/
+cp -f "$SCRIPT_DIR"/firmware/fx2lafw/*.fw "$PREFIX/share/sigrok-firmware"/
 echo "[OK] libsigrok"
 
 # ============================================================================
