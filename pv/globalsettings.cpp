@@ -105,8 +105,8 @@ void GlobalSettings::save_internal_defaults()
 void GlobalSettings::set_defaults_where_needed()
 {
 	if (!contains(Key_General_Language)) {
-		// Default to Chinese
-		setValue(Key_General_Language, "zh_cn");
+		// English is the default UI language.
+		setValue(Key_General_Language, "en");
 		apply_language();
 	}
 
