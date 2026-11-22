@@ -20,6 +20,22 @@ package conflicts with the distribution's `libsigrok` / `libsigrokdecode`
 packages. FX2LAFW/Saleae firmware is bundled, so no separate
 `sigrok-firmware-fx2lafw` package is required.
 
+## Build dependencies (Qt6)
+
+The application builds against Qt6. `qt6-base` and `qt6-svg` are runtime
+dependencies; `qt6-tools` provides `Qt6LinguistTools` for the translations.
+`makepkg -s` installs them from `depends`/`makedepends`, but CI jobs that run
+`makepkg --nodeps` or reuse a prebuilt container must install them first:
+
+```bash
+sudo pacman -S --needed --noconfirm qt6-base qt6-svg qt6-tools
+```
+
+If the build stops with `Could not find a package configuration file provided
+by "Qt6"`, the build environment still has the old Qt5 dependency set. Do not
+work around it by adding `Qt6_DIR` by hand; install the Qt6 packages (or fix
+the container image) so the normal `find_package(Qt6)` search succeeds.
+
 ## DreamSourceLab DSLogic firmware
 
 DSView and `sigrok-firmware-fx2lafw` are **not** required. DreamSourceLab and

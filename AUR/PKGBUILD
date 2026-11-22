@@ -12,7 +12,7 @@
 # conflicts with the distribution's libsigrok/libsigrokdecode packages.
 
 pkgname=u3logicanalyzer-git
-pkgver=1.1.r2542.g4ce08064
+pkgver=1.1.r2571.g566bff85
 pkgrel=1
 install=u3logicanalyzer.install
 pkgdesc="PC host software for CH32H417/CH569 USB logic analyzers (PulseView-based)"
@@ -127,8 +127,15 @@ build() {
     rewrite_pc
 
     # 4/4: U3LogicAnalyzer
-    cmake -S . -B build/app "${cmake_common[@]}" \
-        -DCMAKE_PREFIX_PATH="$stage/usr" \
+    # Do not overwrite a prefix supplied by the caller (for example a Qt6
+    # installed outside /usr by a CI action); append the staged sigrok prefix.
+    local app_prefix="$stage/usr"
+    if [[ -n "${CMAKE_PREFIX_PATH:-}" ]]; then
+        app_prefix="$app_prefix;${CMAKE_PREFIX_PATH}"
+    fi
+
+    if ! cmake -S . -B build/app "${cmake_common[@]}" \
+        -DCMAKE_PREFIX_PATH="$app_prefix" \
         -DCMAKE_C_FLAGS="${CFLAGS} -ffile-prefix-map=$srcdir/$pkgname/=." \
         -DCMAKE_CXX_FLAGS="${CXXFLAGS} -ffile-prefix-map=$srcdir/$pkgname/=." \
         -DENABLE_DECODE=ON \
@@ -136,6 +143,9 @@ build() {
         -DENABLE_TESTS=OFF \
         -DENABLE_SIGNALS=OFF \
         -DSTATIC_PKGDEPS_LIBS=OFF
+    then
+        error "CMake configure failed for U3LogicAnalyzer. If Qt6 was not found, install qt6-base, qt6-svg and qt6-tools (or run makepkg -s without --nodeps)."
+    fi
     cmake --build build/app -j "$jobs"
 }
 

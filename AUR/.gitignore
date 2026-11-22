@@ -1,0 +1,8 @@
+# Ignore everything
+*
+
+# Except
+!PKGBUILD
+!README.md
+u3logicanalyzer.desktop
+u3logicanalyzer.install
