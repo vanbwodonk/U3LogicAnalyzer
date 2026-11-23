@@ -1,13 +1,13 @@
 #!/bin/bash
 # ============================================================================
-# build_windows.sh - 在 MSYS2 MINGW64 下构建 Windows 版 LogicAnalyzer
+# build_windows.sh - 在 MSYS2 UCRT64（或旧 MINGW64）下构建 Windows 版
 #
-# 依赖（MSYS2 MINGW64 shell 中执行）:
+# 依赖（UCRT64 shell 中执行）:
 #   pacman -S --needed --noconfirm \
-#       mingw-w64-x86_64-{gcc,cmake,ninja,pkgconf,gdb} \
-#       mingw-w64-x86_64-{glib2,glibmm,libusb,hidapi,libzip} \
-#       mingw-w64-x86_64-{libserialport,libftdi,nettle} \
-#       mingw-w64-x86_64-{boost,qt6-base,qt6-svg,qt6-tools,python,zip}
+#       mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,gdb} \
+#       mingw-w64-ucrt-x86_64-{glib2,glibmm,libusb,hidapi,libzip} \
+#       mingw-w64-ucrt-x86_64-{libserialport,libftdi,nettle} \
+#       mingw-w64-ucrt-x86_64-{boost,qt6-base,qt6-svg,qt6-tools,python,zip}
 #
 # 产物: build/LogicAnalyzer-win64.zip
 #
@@ -62,12 +62,19 @@ if [ ! -f "$LIBSIGROK_SRC/src/hardware/wch-ch32h417/api.c" ]; then
 	exit 1
 fi
 
-if [ -z "$MSYSTEM" ] || [ "$MSYSTEM" != "MINGW64" ]; then
-    echo "[错误] 请在 MSYS2 MINGW64 shell 中运行（开始菜单 → MSYS2 MINGW64）"
+if [ -z "$MSYSTEM" ] || { [ "$MSYSTEM" != "MINGW64" ] && [ "$MSYSTEM" != "UCRT64" ]; }; then
+    echo "[错误] 请在 MSYS2 MINGW64 或 UCRT64 shell 中运行"
     exit 1
 fi
 
-export PATH="/mingw64/bin:$PATH"
+if [ -z "$MINGW_PREFIX" ]; then
+    if [ "$MSYSTEM" = "UCRT64" ]; then
+        MINGW_PREFIX=/ucrt64
+    else
+        MINGW_PREFIX=/mingw64
+    fi
+fi
+export PATH="$MINGW_PREFIX/bin:$PATH"
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
 
 echo "============================================"
@@ -120,7 +127,7 @@ echo ""
 echo "===== Step 4/4: LogicAnalyzer ====="
 cmake -S "$SCRIPT_DIR" -B "$PVDIR" \
     "${COMMON_OPTS[@]}" \
-    -DCMAKE_PREFIX_PATH="$PREFIX;/mingw64" \
+    -DCMAKE_PREFIX_PATH="$PREFIX;$MINGW_PREFIX" \
     -DENABLE_DECODE=ON \
     -DENABLE_FLOW=OFF \
     -DENABLE_TESTS=OFF \
@@ -136,7 +143,7 @@ echo ""
 echo "===== 部署运行环境 ====="
 for dll in \
     libsigrok.dll libsigrokcxx.dll libsigrokdecode.dll \
-    libglib-2.0-0.dll libglibmm-2.4-1.dll libgobject-2.0-0.dll \
+    libglib-2.0-0.dll libglibmm-2.4-1.dll libglibmm-2.66-1.dll libgobject-2.0-0.dll \
     libsigc-2.0-0.dll libstdc++-6.dll libwinpthread-1.dll \
     libgcc_s_seh-1.dll libgmodule-2.0-0.dll libusb-1.0.dll libhidapi-0.dll \
     libintl-8.dll libiconv-2.dll libpcre2-8-0.dll libffi-8.dll \
@@ -144,7 +151,7 @@ for dll in \
     libserialport-0.dll libftdi1.dll libnettle-8.dll libhogweed-6.dll \
     libgmp-10.dll libpython3.14.dll; do
     cp "$PREFIX/bin/$dll" "$PVDIR/" 2>/dev/null || \
-    cp "/mingw64/bin/$dll" "$PVDIR/" 2>/dev/null || true
+    cp "$MINGW_PREFIX/bin/$dll" "$PVDIR/" 2>/dev/null || true
 done
 
 # Deploy the Qt runtime (DLLs + platform/imageformat plugins). MSYS2 ships

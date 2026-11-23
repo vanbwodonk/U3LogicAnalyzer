@@ -541,9 +541,6 @@ include_directories(
 	${Boost_INCLUDE_DIRS}
 )
 
-# MSYS2 MinGW: hidapi has no pkg-config, add include path directly
-include_directories(D:/msys64/mingw64/include/hidapi)
-
 if(STATIC_PKGDEPS_LIBS)
 	include_directories(${PKGDEPS_STATIC_INCLUDE_DIRS})
 else()
@@ -626,7 +623,11 @@ if(WIN32 AND NOT PKGDEPS_INCLUDE_DIRS)
 		list(APPEND DEPS_INCLUDE_DIRS ${HIDAPI_DIRS})
 	else()
 		# MSYS2 MinGW: hidapi has no pkg-config, add include path directly
-		list(APPEND DEPS_INCLUDE_DIRS /mingw64/include/hidapi)
+		if(DEFINED ENV{MINGW_PREFIX})
+			list(APPEND DEPS_INCLUDE_DIRS $ENV{MINGW_PREFIX}/include/hidapi)
+		else()
+			list(APPEND DEPS_INCLUDE_DIRS /mingw64/include/hidapi)
+		endif()
 	endif()
 
 	include_directories(${DEPS_INCLUDE_DIRS})
@@ -639,7 +640,11 @@ endif()
 
 link_directories(${Boost_LIBRARY_DIRS})
 if(WIN32)
-	link_directories(/mingw64/lib)
+	if(DEFINED ENV{MINGW_PREFIX})
+		link_directories($ENV{MINGW_PREFIX}/lib)
+	else()
+		link_directories(/mingw64/lib)
+	endif()
 endif()
 
 set(PULSEVIEW_LINK_LIBS
@@ -683,10 +688,16 @@ if(NOT HIDAPI_FOUND)
 endif()
 if(HIDAPI_FOUND)
 	include_directories(${HIDAPI_INCLUDE_DIRS})
+	# Homebrew/Qt keg-only packages may not be in the default linker path.
+	link_directories(${HIDAPI_LIBRARY_DIRS})
 	list(APPEND PULSEVIEW_LINK_LIBS ${HIDAPI_LIBRARIES})
 elseif(WIN32)
 	# MSYS2/MinGW fallback: header lives under /mingw64/include/hidapi
-	include_directories(/mingw64/include/hidapi)
+	if(DEFINED ENV{MINGW_PREFIX})
+		include_directories($ENV{MINGW_PREFIX}/include/hidapi)
+	else()
+		include_directories(/mingw64/include/hidapi)
+	endif()
 else()
 	message(FATAL_ERROR "hidapi not found (required by the IAP dialog); install it, e.g. 'brew install hidapi'")
 endif()
