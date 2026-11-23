@@ -602,6 +602,61 @@ void MainWindow::on_device_attached()
 	refresh_hardware_devices();
 }
 
+static QString usb_port_path(libusb_device *device)
+{
+	uint8_t ports[8];
+	const int count = libusb_get_port_numbers(device, ports, sizeof(ports));
+	if (count < 1)
+		return QString();
+
+	QString path = QString("usb/%1-%2")
+		.arg(libusb_get_bus_number(device))
+		.arg(ports[0]);
+	for (int i = 1; i < count; ++i)
+		path += QString(".%1").arg(ports[i]);
+	return path;
+}
+
+bool MainWindow::selected_analyzer_present() const
+{
+	if (!last_focused_session_ || !last_focused_session_->device())
+		return true;
+
+	const auto hardware = std::dynamic_pointer_cast<devices::HardwareDevice>(
+		last_focused_session_->device());
+	if (!hardware)
+		return true;
+
+	const shared_ptr<sigrok::HardwareDevice> sr_dev =
+		hardware->hardware_device();
+	if (!sr_dev || sr_dev->instance_type() != SR_INST_USB)
+		return true;
+
+	const QString connection = QString::fromStdString(sr_dev->connection_id());
+	if (connection.isEmpty() || connection.startsWith("ch375/")) {
+		// WCH's CH375 transport uses a logical connection id; use the
+		// existing supported-ID presence check for that case.
+		return analyzer_present(QString::fromStdString(sr_dev->vendor()));
+	}
+	if (!usb_context_)
+		return true;
+
+	libusb_device **devices = nullptr;
+	const ssize_t count = libusb_get_device_list(usb_context_, &devices);
+	if (count < 0)
+		return true;
+
+	bool present = false;
+	for (ssize_t i = 0; i < count; ++i) {
+		if (usb_port_path(devices[i]) == connection) {
+			present = true;
+			break;
+		}
+	}
+	libusb_free_device_list(devices, 1);
+	return present;
+}
+
 bool MainWindow::read_usb_snapshot(std::set<UsbDeviceIdentity> &snapshot) const
 {
 	if (!usb_context_)
@@ -642,6 +697,7 @@ bool MainWindow::analyzer_present(const QString &vendor) const
 
 void MainWindow::start_device_monitoring()
 {
+	selected_absence_polls_ = 0;
 	std::set<UsbDeviceIdentity> snapshot;
 	if (read_usb_snapshot(snapshot)) {
 		observed_usb_devices_ = snapshot;
@@ -652,6 +708,20 @@ void MainWindow::start_device_monitoring()
 
 void MainWindow::poll_hardware_devices()
 {
+	// Firmware upload/re-enumeration can make the selected analyzer vanish
+	// for a moment (Saleae FX2 needs ~2.3 s). Require three consecutive
+	// absent polls before detaching, so a re-enumerating device is not
+	// mistaken for an unplug.
+	if (!selected_analyzer_present()) {
+		if (++selected_absence_polls_ < 3)
+			return;
+		selected_absence_polls_ = 0;
+		pending_presence_change_ = PresenceChange::Removed;
+		device_refresh_timer_.start();
+		return;
+	}
+	selected_absence_polls_ = 0;
+
 	std::set<UsbDeviceIdentity> snapshot;
 	if (!read_usb_snapshot(snapshot)) {
 		if (!usb_error_reported_) {
@@ -679,6 +749,7 @@ void MainWindow::poll_hardware_devices()
 void MainWindow::refresh_devices_now()
 {
 	force_device_refresh_ = true;
+	selected_absence_polls_ = 0;
 	std::set<UsbDeviceIdentity> snapshot;
 	if (read_usb_snapshot(snapshot)) {
 		pending_presence_change_ = usb_snapshot_initialized_
@@ -706,6 +777,7 @@ void MainWindow::disconnect_current_device()
 
 	last_focused_session_->stop_capture();
 	last_focused_session_->disconnect_device();
+	selected_absence_polls_ = 0;
 
 	if (last_focused_session_->main_bar()) {
 		last_focused_session_->main_bar()->reset_device_selector();

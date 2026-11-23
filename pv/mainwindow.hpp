@@ -113,6 +113,7 @@ public:
 	void restore_sessions();
 	void add_default_setting();
 	bool analyzer_present(const QString &vendor) const;
+	bool selected_analyzer_present() const;
 
 private:
 	void setup_ui();
@@ -231,6 +232,7 @@ private:
 	bool force_device_refresh_ = false;
 	PresenceChange pending_presence_change_ = PresenceChange::Unchanged;
 	int device_scan_retries_ = 0;
+	int selected_absence_polls_ = 0;
 	bool application_menu_initialized_ = false;
 	QMenu *menu_file_ = nullptr;
 	QMenu *menu_device_ = nullptr;
