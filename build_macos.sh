@@ -92,11 +92,16 @@ fi
 EXTRA_PKGCONFIG=""
 EXTRA_CMAKE_PREFIX=""
 if [ "$(uname -s)" = "Darwin" ]; then
-    for p in /opt/homebrew/opt/qt /opt/homebrew/opt/glibmm@2.66; do
-        if [ -d "$p" ]; then
-            EXTRA_PKGCONFIG="$EXTRA_PKGCONFIG:$p/lib/pkgconfig"
-            EXTRA_CMAKE_PREFIX="$EXTRA_CMAKE_PREFIX;$p"
-        fi
+    # Resolve Homebrew prefixes instead of assuming /opt/homebrew: Intel
+    # runners use /usr/local, and keg-only Python needs its pkg-config path.
+    for formula in qt glibmm@2.66 python@3.14 python3; do
+        p="$(brew --prefix "$formula" 2>/dev/null || true)"
+        [ -n "$p" ] && [ -d "$p" ] || continue
+        EXTRA_PKGCONFIG="$EXTRA_PKGCONFIG:$p/lib/pkgconfig"
+        EXTRA_CMAKE_PREFIX="$EXTRA_CMAKE_PREFIX;$p"
+        case "$formula" in
+            python*) export PATH="$p/bin:$PATH" ;;
+        esac
     done
 fi
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig${EXTRA_PKGCONFIG}:/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig"
