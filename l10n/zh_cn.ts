@@ -1835,6 +1835,9 @@ PulseView可能需要重新启动才能正确显示。</translation>
     <message><source>Max Height</source><translation>最大高度</translation></message>
     <message><source>Enable RLE Compress</source><translation>启用 RLE 压缩</translation></message>
     <message><source>Channel</source><translation>通道</translation></message>
+    <message><source>Settings</source><translation>设置</translation></message>
+    <message><source>FX2 Options</source><translation>FX2 选项</translation></message>
+    <message><source>Failed to apply FX2 channel mode samplerate:</source><translation>应用 FX2 通道模式采样率失败：</translation></message>
     <message><source>Use %1 Channels (Max %2 MHz)</source><translation>使用 %1 通道（最高 %2 MHz）</translation></message>
     <message><source>Failed to read operation mode, defaulting to Buffer Mode:</source><translation>读取操作模式失败，默认使用 Buffer 模式：</translation></message>
     <message><source>Failed to read threshold level, using device default:</source><translation>读取阈值电平失败，使用设备默认值：</translation></message>

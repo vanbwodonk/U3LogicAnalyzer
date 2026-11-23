@@ -113,9 +113,11 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   per-channel match table; Advanced mode builds multi-stage libsigrok triggers
   (up to 16 stages). Serial trigger and per-channel invert/counter are not
   supported by the DSLogic driver.
-- `pv/popups/channels.*` — the Device Options dialog (Acquisition/Channels
+- `pv/popups/channels.*` — the Device Options dialog (Settings/Channels
   tabs). Non-WCH devices get a generic `binding::Device` hardware form from
   libsigrok config keys; the DSLogic threshold is exposed as a 0.1 V slider.
+  FX2LAFW devices get channel modes: 8 ch at 24 MHz, or 16 ch at 12 MHz on
+  16-bit profiles.
 - `libsigrok/src/hardware/wch-ch32h417/` — `api.c` driver
   lifecycle/configuration, `protocol.c` command protocol,
   `ch375_wrapper.c` transport (CH375DLL on Windows, libusb elsewhere).
@@ -197,7 +199,7 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   UI enables the first N channels and limits the toolbar samplerate list
   (Buffer 4/8/16 ch at 400/200/100 MHz, Stream 3/6/12/16 ch at
   100/50/25/20 MHz). The driver still exposes 16 probes; `MainBar` filters
-  rates via `dslogic_max_samplerate_`. Buffer mode pipelines up to 16
+  rates via `channel_mode_max_samplerate_`. Buffer mode pipelines up to 16
   in-flight 512 KiB bulk transfers; the worker uses an 8x8 bit-transpose
   instead of per-bit deinterleaving.
 - The acquisition path is sensitive to 8- vs 16-channel packing:

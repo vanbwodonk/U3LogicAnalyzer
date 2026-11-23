@@ -124,6 +124,17 @@ namespace pv
 			model.contains("DSLogic", Qt::CaseInsensitive);
 	}
 
+	static bool is_fx2_device(const shared_ptr<devices::Device> &device)
+	{
+		if (!device || !device->device())
+			return false;
+
+		const auto hw_dev =
+			std::dynamic_pointer_cast<devices::HardwareDevice>(device);
+		return hw_dev && QString::fromStdString(
+			hw_dev->hardware_device()->driver()->name()) == "fx2lafw";
+	}
+
 	MainBar *MainBar::s_mainbar_instance = nullptr;
 		const uint64_t MainBar::MinSampleCount = 12500ULL;
 		const uint64_t MainBar::MaxSampleCount = 1000000000000ULL;
@@ -803,11 +814,11 @@ namespace pv
 					// CH32H417: 固定16个采样率，不随通道数变化
 					num_elements = 16;
 				}
-				else if (vendor == "DreamSourceLab" && dslogic_max_samplerate_ > 0)
+				else if (channel_mode_max_samplerate_ > 0)
 				{
-					// DSLogic: hide rates above the current channel mode limit.
+					// DSLogic/FX2: hide rates above the current channel mode limit.
 					gsize n = 0;
-					while (n < num_elements && elements[n] <= dslogic_max_samplerate_)
+					while (n < num_elements && elements[n] <= channel_mode_max_samplerate_)
 						++n;
 					if (n > 0)
 						num_elements = n;
@@ -975,11 +986,12 @@ namespace pv
 			QString model = QString::fromStdString(device->device()->model());
 			bool is_ch32h417 = (vendor == "USB3.0(CH32H417)" || model == "USB3.0(CH32H417)");
 			bool is_dslogic = is_dslogic_device(device);
+			bool is_fx2 = is_fx2_device(device);
 
-			// DreamSourceLab DSLogic: limit the sample rate list to the
-			// maximum supported by the selected buffer/stream channel mode.
-			if (is_dslogic) {
-				dslogic_max_samplerate_ = maxSampleRate;
+			// DSLogic/FX2: limit the sample rate list to the maximum
+			// supported by the selected channel mode.
+			if (is_dslogic || is_fx2) {
+				channel_mode_max_samplerate_ = maxSampleRate;
 				uint64_t desired = sample_rate_value_;
 				if (desired == 0 || desired > maxSampleRate)
 					desired = maxSampleRate;
@@ -2044,7 +2056,7 @@ namespace pv
 			// clip the new device's sample-rate list until that device
 			// reports its own limit.
 			MaxSampleRate = SR_GHZ(1);
-			dslogic_max_samplerate_ = 0;
+			channel_mode_max_samplerate_ = 0;
 
 			update_device_list();
 			update_device_status_icon();

@@ -49,6 +49,7 @@
 #include <pv/data/logicsegment.hpp>
 #include <pv/data/signalbase.hpp>
 #include <pv/devices/device.hpp>
+#include <pv/devices/hardwaredevice.hpp>
 
 using std::make_shared;
 using std::map;
@@ -147,7 +148,7 @@ Channels::Channels(Session &session, QString device_name, QWidget *parent) :
 	channels_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	channels_scroll->setWidget(channels_page);
 
-	tabs_->addTab(acquisition_scroll, tr("Acquisition"));
+	tabs_->addTab(acquisition_scroll, tr("Settings"));
 	tabs_->addTab(channels_scroll, tr("Channels"));
 	root_layout->addWidget(tabs_);
 	setLayout(root_layout);
@@ -214,10 +215,17 @@ Channels::DeviceMode Channels::determineDeviceMode() const
 
 	if (wch_type == WchDeviceType::None) {
 		const shared_ptr<devices::Device> pv_dev = session_.device();
-		if (pv_dev && pv_dev->device() &&
-				QString::fromStdString(pv_dev->device()->model())
+		if (pv_dev && pv_dev->device()) {
+			const auto hw_dev =
+				std::dynamic_pointer_cast<devices::HardwareDevice>(pv_dev);
+			const QString driver = hw_dev ? QString::fromStdString(
+				hw_dev->hardware_device()->driver()->name()) : QString();
+			if (driver == "fx2lafw")
+				return DeviceMode::FX2;
+			if (QString::fromStdString(pv_dev->device()->model())
 					.contains("DSLogic", Qt::CaseInsensitive))
-			return DeviceMode::DSLOGIC;
+				return DeviceMode::DSLOGIC;
+		}
 		return DeviceMode::OTHER;
 	}
 
@@ -253,7 +261,9 @@ void Channels::init_ui()
 		signal_map[sig->channel()] = sig;
 	}
 
-	if (device_mode_ == DeviceMode::DSLOGIC) {
+	if (device_mode_ == DeviceMode::FX2) {
+		init_fx2_ui();
+	} else if (device_mode_ == DeviceMode::DSLOGIC) {
 		init_dslogic_ui();
 
 		// Remaining generic device options (capture ratio, external clock,
@@ -351,15 +361,24 @@ void Channels::init_ui()
 
 	layout_.setRowWrapPolicy(QFormLayout::DontWrapRows);
 
-	if (device_mode_ == DeviceMode::DSLOGIC) {
+	if (device_mode_ == DeviceMode::DSLOGIC || device_mode_ == DeviceMode::FX2) {
 		// MainBar connects our signals after this constructor returns; apply
 		// the initial channel mode once the event loop is running so the
 		// sample-rate limit reaches the toolbar as well.
 		QTimer::singleShot(0, this, [this]() {
-			for (size_t i = 0; i < dslogic_channel_radios_.size(); ++i) {
-				if (dslogic_channel_radios_[i]->isChecked()) {
-					apply_dslogic_channel_mode((int)i);
-					break;
+			if (device_mode_ == DeviceMode::DSLOGIC) {
+				for (size_t i = 0; i < dslogic_channel_radios_.size(); ++i) {
+					if (dslogic_channel_radios_[i]->isChecked()) {
+						apply_dslogic_channel_mode((int)i);
+						break;
+					}
+				}
+			} else {
+				for (size_t i = 0; i < fx2_channel_radios_.size(); ++i) {
+					if (fx2_channel_radios_[i]->isChecked()) {
+						apply_fx2_channel_mode((int)i);
+						break;
+					}
 				}
 			}
 		});
@@ -482,6 +501,91 @@ void Channels::init_dslogic_ui()
 			qWarning() << tr("Failed to set threshold level:") << e.what();
 		}
 	});
+}
+
+void Channels::init_fx2_ui()
+{
+	const shared_ptr<sigrok::Device> sr_dev = session_.device()->device();
+
+	QGroupBox* options_box = new QGroupBox(tr("FX2 Options"), this);
+	QFormLayout* form = new QFormLayout(options_box);
+	form->addRow(tr("Device"), new QLabel(
+		QString::fromStdString(sr_dev->model()), options_box));
+	acquisition_layout_->addRow(options_box);
+
+	fx2_channel_group_ = new QGroupBox(tr("Channel"), this);
+	fx2_channel_layout_ = new QVBoxLayout(fx2_channel_group_);
+	acquisition_layout_->addRow(fx2_channel_group_);
+
+	int physical_channels = 0;
+	for (const shared_ptr<sigrok::Channel> &channel : sr_dev->channels())
+		if (channel->type() == sigrok::ChannelType::LOGIC)
+			++physical_channels;
+
+	struct Mode { uint16_t channels; uint64_t max_rate; };
+	vector<Mode> modes;
+	// A 16-bit FX2 profile can use all 16 channels at 12 MHz, or trade half
+	// of them for 24 MHz. 8-bit profiles only have one valid mode.
+	if (physical_channels >= 16) {
+		modes.push_back({16, SR_MHZ(12)});
+		modes.push_back({8, SR_MHZ(24)});
+	} else {
+		modes.push_back({8, SR_MHZ(24)});
+	}
+
+	for (size_t i = 0; i < modes.size(); ++i) {
+		QRadioButton* radio = new QRadioButton(
+			tr("Use %1 Channels (Max %2 MHz)")
+				.arg(modes[i].channels)
+				.arg(modes[i].max_rate / SR_MHZ(1)),
+			fx2_channel_group_);
+		radio->setProperty("channels", modes[i].channels);
+		radio->setProperty("max_rate", QVariant::fromValue<qulonglong>(
+			modes[i].max_rate));
+		radio->setMinimumHeight(radio->fontMetrics().height() + 10);
+		fx2_channel_layout_->addWidget(radio);
+		fx2_channel_radios_.push_back(radio);
+		connect(radio, &QRadioButton::clicked, this,
+			[this, i]() { apply_fx2_channel_mode((int)i); });
+	}
+	fx2_channel_radios_[0]->setChecked(true);
+	channel_max_ = modes[0].channels;
+}
+
+void Channels::apply_fx2_channel_mode(int index)
+{
+	if (index < 0 || (size_t)index >= fx2_channel_radios_.size())
+		return;
+
+	QRadioButton* radio = fx2_channel_radios_[index];
+	const uint16_t channels = (uint16_t)radio->property("channels").toUInt();
+	const uint64_t max_rate = radio->property("max_rate").toULongLong();
+	channel_max_ = channels;
+
+	updating_channels_ = true;
+	for (int i = 0; i < (int)logic_checkboxes_.size(); ++i) {
+		const bool enabled = i < channels;
+		logic_checkboxes_[i]->setChecked(enabled);
+		logic_checkboxes_[i]->setEnabled(enabled);
+		auto it = checkbox_signal_map_.find(logic_checkboxes_[i]);
+		if (it != checkbox_signal_map_.end())
+			it->second->set_enabled(enabled);
+	}
+	updating_channels_ = false;
+
+	try {
+		session_.device()->device()->config_set(
+			sigrok::ConfigKey::SAMPLERATE,
+			Glib::Variant<guint64>::create(max_rate));
+	} catch (sigrok::Error &e) {
+		qWarning() << tr("Failed to apply FX2 channel mode samplerate:") << e.what();
+	}
+
+	session_.update_signals();
+	channel_selection_changed();
+	channel_count_change(channels);
+	max_sample_rate_change(max_rate);
+	sample_count_limits_changed();
 }
 
 void Channels::load_dslogic_channel_modes()
@@ -629,10 +733,11 @@ void Channels::init_channel_state()
 		}
 	}
 
-	if (device_mode_ == DeviceMode::DSLOGIC) {
+	if (device_mode_ == DeviceMode::DSLOGIC || device_mode_ == DeviceMode::FX2) {
 		for (int i = 0; i < (int)logic_checkboxes_.size(); ++i) {
 			const bool enabled = i < channel_max_;
 			logic_checkboxes_[i]->setChecked(enabled);
+			logic_checkboxes_[i]->setEnabled(enabled);
 			auto it = checkbox_signal_map_.find(logic_checkboxes_[i]);
 			if (it != checkbox_signal_map_.end())
 				it->second->set_enabled(enabled);

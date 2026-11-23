@@ -84,6 +84,7 @@ public:
 		CH32H417_USB2_LOGIC,
 		CH32H417_ADC,
 		DSLOGIC,
+		FX2,
 		OTHER
 	};
 
@@ -133,6 +134,8 @@ private:
 	void init_wch_ui();
 	void init_other_ui();
 	void init_dslogic_ui();
+	void init_fx2_ui();
+	void apply_fx2_channel_mode(int index);
 	void load_dslogic_channel_modes();
 	void rebuild_dslogic_channel_radios();
 	void apply_dslogic_channel_mode(int index);
@@ -175,6 +178,9 @@ private:
 	QDoubleSpinBox* dslogic_threshold_;
 	QGroupBox* dslogic_channel_group_;
 	QVBoxLayout* dslogic_channel_layout_;
+	QGroupBox* fx2_channel_group_;
+	QVBoxLayout* fx2_channel_layout_;
+	vector<QRadioButton*> fx2_channel_radios_;
 	vector<QRadioButton*> dslogic_channel_radios_;
 	vector<DslogicChannelMode> dslogic_modes_;
 
