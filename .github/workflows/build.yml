@@ -35,7 +35,9 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          update: true
+          # Do not run a full rolling pacman -Syu on hosted runners; it can
+          # fail on package conflicts before the requested packages install.
+          update: false
           install: >-
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
