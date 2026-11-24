@@ -179,16 +179,16 @@ class Decoder(srd.Decoder):
         if (tr, code) in table:
             return table[(tr, code)]
         if tr == 0 and 0 <= code <= 15:
-            return ('undefined mode code %d' % code, False, False, False)
+            return (' undefined mode code %d' % code, False, False, False)
         if tr == 1 and 9 <= code <= 15:
-            return ('reserved mode code %d' % code, False, True, False)
+            return (' reserved mode code %d' % code, False, True, False)
         if tr == 1 and 20 <= code <= 21:
-            return ('undefined mode code %d' % code, True, False, False)
+            return (' undefined mode code %d' % code, True, False, False)
         if tr == 1 and 22 <= code <= 31:
-            return ('reserved mode code %d' % code, True, False, False)
+            return (' reserved mode code %d' % code, True, False, False)
         if tr == 0 and 22 <= code <= 31:
-            return ('reserved mode code %d' % code, True, True, False)
-        return ('undefined mode code %d' % code, True, False, False)
+            return (' reserved mode code %d' % code, True, True, False)
+        return (' undefined mode code %d' % code, True, False, False)
 
     def putcwdetails(self):
         device_type = getattr(self, 'current_device_type', self.device_type_option)
