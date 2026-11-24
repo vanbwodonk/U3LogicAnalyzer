@@ -160,21 +160,21 @@ class Decoder(srd.Decoder):
         # or 31; the word-count field carries the code. Return
         # (name, needs_data_word, broadcast_allowed, defined).
         table = {
-            (1, 0): ('dynamic bus control', False, False, True),
-            (1, 1): ('synchronize (without data)', False, True, True),
-            (1, 2): ('transmit status word', False, False, True),
-            (1, 3): ('initiate self-test', False, True, True),
-            (1, 4): ('transmitter shutdown', False, True, True),
-            (1, 5): ('override transmitter shutdown', False, True, True),
-            (1, 6): ('inhibit terminal flag', False, True, True),
-            (1, 7): ('override inhibit terminal flag', False, True, True),
-            (1, 8): ('reset remote terminal', False, True, True),
-            (1, 16): ('transmit vector word', True, False, True),
-            (1, 18): ('transmit last command', True, False, True),
-            (1, 19): ('transmit built-in test word', True, False, True),
-            (0, 17): ('synchronize with data word', True, True, True),
-            (0, 20): ('selected transmitter shutdown', True, True, True),
-            (0, 21): ('override selected transmitter shutdown', True, True, True),
+            (1, 0): (' dynamic bus control', False, False, True),
+            (1, 1): (' synchronize (without data)', False, True, True),
+            (1, 2): (' transmit status word', False, False, True),
+            (1, 3): (' initiate self-test', False, True, True),
+            (1, 4): (' transmitter shutdown', False, True, True),
+            (1, 5): (' override transmitter shutdown', False, True, True),
+            (1, 6): (' inhibit terminal flag', False, True, True),
+            (1, 7): (' override inhibit terminal flag', False, True, True),
+            (1, 8): (' reset remote terminal', False, True, True),
+            (1, 16): (' transmit vector word', True, False, True),
+            (1, 18): (' transmit last command', True, False, True),
+            (1, 19): (' transmit built-in test word', True, False, True),
+            (0, 17): (' synchronize with data word', True, True, True),
+            (0, 20): (' selected transmitter shutdown', True, True, True),
+            (0, 21): (' override selected transmitter shutdown', True, True, True),
         }
         if (tr, code) in table:
             return table[(tr, code)]
