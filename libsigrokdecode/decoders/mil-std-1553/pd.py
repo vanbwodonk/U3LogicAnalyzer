@@ -260,6 +260,13 @@ class Decoder(srd.Decoder):
         if device_type == 'slave':
             wordtype = 'SW'
         if self.synctype == 'CW':
+            info = self.bits >> 1
+            if wordtype == 'CW':
+                self.last_command_tr = (info >> 10) & 1
+                self.last_command_addr = (info >> 11) & 0x1F
+                self.last_command_count = info & 0x1F
+            else:
+                self.last_command_tr = None
             if(self.isparity()):
                 self.put(self.syncsample - 3*self.halfbit, self.actualsample + self.halfbit, self.out_ann, [0, ['%s: %s' % (wordtype, self.puthexdata())]])
                 cwdetailswalue = self.putcwdetails()
@@ -288,8 +295,22 @@ class Decoder(srd.Decoder):
                 if self.device_type_option == 'auto':
                     idle_samples = self.syncsample - self.last_word_end_sample
                     idle_time = idle_samples / self.samplerate if self.samplerate else 0
-                    # 14 microseconds = 14e-6 seconds
+                    info = self.bits >> 1
+                    word_tr = (info >> 10) & 1
+                    word_addr = (info >> 11) & 0x1F
+                    word_count = info & 0x1F
+                    # 14 microseconds = 14e-6 seconds. A new message starts
+                    # with a BC command. For RT-to-RT, the second command is
+                    # sent back-to-back by the BC: first is receive (T/R=0),
+                    # second is transmit (T/R=1) to a different RT with the
+                    # same word count. Without this check auto mode would
+                    # mistake the second command for an RT status word.
                     if idle_time > 14e-6:
+                        self.current_device_type = 'master'
+                        self.last_command_tr = None
+                    elif (self.last_command_tr == 0 and word_tr == 1 and
+                          self.last_command_addr != word_addr and
+                          self.last_command_count == word_count):
                         self.current_device_type = 'master'
                     else:
                         self.current_device_type = 'slave'
@@ -332,9 +353,12 @@ class Decoder(srd.Decoder):
         self.lang = 0  # Always English
         # Normally a dict; tolerate harnesses that provide the option tuple.
         try:
-            self.device_type_option = self.options['device_type']
+            option = self.options['device_type']
         except (KeyError, TypeError):
-            self.device_type_option = self.options[0] if self.options else 'auto'
+            option = self.options[0] if self.options else 'auto'
+        if isinstance(option, dict):
+            option = option.get('default', 'auto')
+        self.device_type_option = option
 
     def decode(self):
         if not self.samplerate:
@@ -355,6 +379,9 @@ class Decoder(srd.Decoder):
         self.bitcount = 0
         self.dwcount = 0
         self.last_word_end_sample = 0
+        self.last_command_tr = None
+        self.last_command_addr = -1
+        self.last_command_count = -1
 
         while True:
             if self.state == 'FIND_BIT_AFTER_COMMAND_SYNC':
