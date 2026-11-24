@@ -155,8 +155,43 @@ class Decoder(srd.Decoder):
         dwdetailsvalue = 'DATA-' + format(self.dwcount)
         return dwdetailsvalue
 
+    def modecode_details(self, tr, code):
+        # MIL-STD-1553 mode codes. A mode code is selected by subaddress 0
+        # or 31; the word-count field carries the code. Return
+        # (name, needs_data_word, broadcast_allowed, defined).
+        table = {
+            (1, 0): ('dynamic bus control', False, False, True),
+            (1, 1): ('synchronize (without data)', False, True, True),
+            (1, 2): ('transmit status word', False, False, True),
+            (1, 3): ('initiate self-test', False, True, True),
+            (1, 4): ('transmitter shutdown', False, True, True),
+            (1, 5): ('override transmitter shutdown', False, True, True),
+            (1, 6): ('inhibit terminal flag', False, True, True),
+            (1, 7): ('override inhibit terminal flag', False, True, True),
+            (1, 8): ('reset remote terminal', False, True, True),
+            (1, 16): ('transmit vector word', True, False, True),
+            (1, 18): ('transmit last command', True, False, True),
+            (1, 19): ('transmit built-in test word', True, False, True),
+            (0, 17): ('synchronize with data word', True, True, True),
+            (0, 20): ('selected transmitter shutdown', True, True, True),
+            (0, 21): ('override selected transmitter shutdown', True, True, True),
+        }
+        if (tr, code) in table:
+            return table[(tr, code)]
+        if tr == 0 and 0 <= code <= 15:
+            return ('undefined mode code %d' % code, False, False, False)
+        if tr == 1 and 9 <= code <= 15:
+            return ('reserved mode code %d' % code, False, True, False)
+        if tr == 1 and 20 <= code <= 21:
+            return ('undefined mode code %d' % code, True, False, False)
+        if tr == 1 and 22 <= code <= 31:
+            return ('reserved mode code %d' % code, True, False, False)
+        if tr == 0 and 22 <= code <= 31:
+            return ('reserved mode code %d' % code, True, True, False)
+        return ('undefined mode code %d' % code, True, False, False)
+
     def putcwdetails(self):
-        device_type = getattr(self, 'current_device_type', self.options['device_type'])
+        device_type = getattr(self, 'current_device_type', self.device_type_option)
         if device_type == 'master':
             self.cwdetailscolour = 4
             adrvalue = ((self.bits >> 12) & 0x1F)
@@ -170,54 +205,15 @@ class Decoder(srd.Decoder):
             else:
                 cwdetailsvalue = self.m_itd[self.lang] + format(adrvalue)
             if (subadrvalue == 0x0) | (subadrvalue == 0x1F):
-                cmdinfvalue = self.e_m_comm[self.lang]
-                if kvalue == 1:
-                    if (countdwvalue == 0):
-                        cmdinfvalue = self.m_accept[self.lang]
-                        if(adrvalue == 31):
-                            self.cwdetailscolour = 3
-                            cmdinfvalue = cmdinfvalue + self.e_m_notgroup[self.lang]
-                    elif (countdwvalue == 1):
-                        cmdinfvalue = self.m_synch[self.lang]
-                    elif (countdwvalue == 2):
-                        cmdinfvalue = self.m_sendaw[self.lang]
-                        if(adrvalue == 31):
-                            self.cwdetailscolour = 3
-                            cmdinfvalue = cmdinfvalue + self.e_m_notgroup[self.lang]
-                    elif (countdwvalue == 3):
-                        cmdinfvalue = self.m_selfcontrol[self.lang]
-                    elif (countdwvalue == 4):
-                        cmdinfvalue = self.m_blocktx[self.lang]
-                    elif (countdwvalue == 5):
-                        cmdinfvalue = self.m_unlock[self.lang]
-                    elif (countdwvalue == 6):
-                        cmdinfvalue = self.m_blocksign[self.lang]
-                    elif (countdwvalue == 7):
-                        cmdinfvalue = self.m_reset[self.lang]
-
-                    elif (countdwvalue == 16):
-                        cmdinfvalue = self.m_sendvec[self.lang]
-                        if(adrvalue == 31):
-                            self.cwdetailscolour = 3
-                            cmdinfvalue = cmdinfvalue + self.e_m_notgroup[self.lang]
-                    elif (countdwvalue == 18):
-                        cmdinfvalue = self.m_lastcomm[self.lang]
-                        if(adrvalue == 31):
-                            self.cwdetailscolour = 3
-                            cmdinfvalue = cmdinfvalue + self.e_m_notgroup[self.lang]
-                    elif (countdwvalue == 19):
-                        cmdinfvalue = self.m_sendvsk[self.lang]
-                        if(adrvalue == 31):
-                            self.cwdetailscolour = 3
-                            cmdinfvalue = cmdinfvalue + self.e_m_notgroup[self.lang]
-
-                else:
-                    if (countdwvalue == 17):
-                        cmdinfvalue = self.m_synchdw[self.lang]
-                    elif (countdwvalue == 20):
-                        cmdinfvalue = self.m_blocki[self.lang]
-                    elif (countdwvalue == 21):
-                        cmdinfvalue = self.m_unlocki[self.lang]
+                name, needs_data, broadcast_allowed, defined = \
+                    self.modecode_details(kvalue, countdwvalue)
+                self.cwdetailscolour = 4 if defined else 3
+                cmdinfvalue = name
+                if not defined:
+                    cmdinfvalue += ' (reserved)'
+                if adrvalue == 31 and not broadcast_allowed:
+                    self.cwdetailscolour = 3
+                    cmdinfvalue += self.e_m_notgroup[self.lang]
                 cwdetailsvalue = cwdetailsvalue + cmdinfvalue
 
             else:
@@ -259,7 +255,7 @@ class Decoder(srd.Decoder):
             return cwdetailsvalue
 
     def putwordlabel(self):
-        device_type = getattr(self, 'current_device_type', self.options['device_type'])
+        device_type = getattr(self, 'current_device_type', self.device_type_option)
         wordtype = 'CW'
         if device_type == 'slave':
             wordtype = 'SW'
@@ -289,7 +285,7 @@ class Decoder(srd.Decoder):
         if(self.syncsample != 0):
             if self.bitcount == 17:
                 # Auto mode: decide device type based on idle time
-                if self.options['device_type'] == 'auto':
+                if self.device_type_option == 'auto':
                     idle_samples = self.syncsample - self.last_word_end_sample
                     idle_time = idle_samples / self.samplerate if self.samplerate else 0
                     # 14 microseconds = 14e-6 seconds
@@ -298,7 +294,7 @@ class Decoder(srd.Decoder):
                     else:
                         self.current_device_type = 'slave'
                 else:
-                    self.current_device_type = self.options['device_type']
+                    self.current_device_type = self.device_type_option
                 self.putwordlabel()
                 self.last_word_end_sample = self.actualsample  # Update for next word
             else:
@@ -334,6 +330,11 @@ class Decoder(srd.Decoder):
     def start(self):
         self.out_ann = self.register(srd.OUTPUT_ANN)
         self.lang = 0  # Always English
+        # Normally a dict; tolerate harnesses that provide the option tuple.
+        try:
+            self.device_type_option = self.options['device_type']
+        except (KeyError, TypeError):
+            self.device_type_option = self.options[0] if self.options else 'auto'
 
     def decode(self):
         if not self.samplerate:
