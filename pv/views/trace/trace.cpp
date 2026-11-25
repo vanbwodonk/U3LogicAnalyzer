@@ -294,14 +294,7 @@ void Trace::hover_point_changed(const QPoint &hp)
 
 void Trace::paint_back(QPainter &p, ViewItemPaintParams &pp)
 {
-	if (base_->type() == base_->LogicChannel) {
-		p.setPen(QPen(QColor(72, 78, 89, 115), 1, Qt::SolidLine));
-		const pair<int, int> extents = v_extents();
-		const int top = get_visual_y() + extents.first;
-		const int btm = get_visual_y() + extents.second;
-		float y = top + ((btm - top) / 2.0);
-		p.drawLine(pp.left(), y, pp.right(), y);
-	} else{
+	if (base_->type() != base_->LogicChannel) {
 		const View *view = owner_->view();
 		assert(view);
 		if (view->colored_bg())

@@ -25,6 +25,7 @@
 #include <limits>
 #include <QDateTime>
 #include "signal.hpp"
+#include <pv/data/signalbase.hpp>
 #include "view.hpp"
 #include "viewitempaintparams.hpp"
 #include "viewport.hpp"
@@ -233,6 +234,32 @@ void Viewport::paintEvent(QPaintEvent*)
 		ViewItemPaintParams row_pp(rect(), view_.scale(), view_.offset());
 		for (const shared_ptr<ViewItem>& r : row_items)
 			(r.get()->*(*paint_func))(p, row_pp);
+	}
+
+	// Draw channel separators after the traces so they remain visible over
+	// the waveform and the alternating row background.
+	p.setRenderHint(QPainter::Antialiasing, false);
+	for (const shared_ptr<ViewItem>& row : row_items) {
+		const shared_ptr<Signal> signal = dynamic_pointer_cast<Signal>(row);
+		if (!signal || !signal->base() ||
+				!signal->base()->enabled() ||
+				signal->base()->type() != pv::data::SignalBase::LogicChannel)
+			continue;
+
+		const pair<int, int> extents = signal->v_extents();
+		const int top = signal->get_visual_y() + extents.first;
+		const int btm = signal->get_visual_y() + extents.second;
+		if (btm <= top)
+			continue;
+
+		p.setPen(QPen(QColor(62, 69, 81), 1));
+		p.drawLine(0, btm - 2, width(), btm - 2);
+		p.setPen(QPen(QColor(118, 127, 142), 1));
+		p.drawLine(0, btm - 1, width(), btm - 1);
+
+		// Keep a compact color tick at the left edge of every logic row.
+		p.fillRect(QRectF(0, top + 1, 3, btm - top - 2),
+			signal->base()->color());
 	}
 	p.end();
 	if (bezier_start_ !=  QPointF(0,0) && bezier_end_ != QPointF(0,0)) {
