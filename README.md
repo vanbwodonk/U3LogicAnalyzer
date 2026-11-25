@@ -25,6 +25,8 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
 - For long captures prefer Stream mode: buffer mode uploads only after the
   acquisition finishes, while stream mode transfers data during acquisition
   (2 s @ 10 MHz / 16 ch: ~2.0 s stream vs ~3.4 s buffer)
+- Logic traces have per-channel H/L markers and clear row separators. The
+  default logic channel height is 40 px and is configurable in Settings.
 - FX2LAFW devices expose channel modes in Device Options: 8 channels at
   up to 24 MHz, or 16 channels at up to 12 MHz on 16-bit profiles.
 - Device → Trigger Option provides Simple per-channel triggers and

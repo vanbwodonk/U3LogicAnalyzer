@@ -94,7 +94,7 @@ LogicSignal::LogicSignal(pv::Session &session, shared_ptr<data::SignalBase> base
 	trigger_low_(nullptr),
 	trigger_change_(nullptr)
 {
-	signal_height_ = 2 * QFontMetrics(QApplication::font()).height();
+	signal_height_ = 40;
 	base_->height_ = signal_height();
 	GlobalSettings settings;
 	signal_height_ = settings.value(GlobalSettings::Key_View_DefaultLogicHeight).toInt();
@@ -170,7 +170,7 @@ void LogicSignal::restore_settings(std::map<QString, QVariant> settings)
 			restore_signal_height_ = signal_height_;
 		}
 		else{
-			signal_height_ = 2 * QFontMetrics(QApplication::font()).height();
+			signal_height_ = 40;
 			base_->height_ = signal_height();
 		}
 		owner_->view()->update_restore_logic_height(restore_signal_height_);
@@ -182,7 +182,7 @@ void LogicSignal::restore_settings(std::map<QString, QVariant> settings)
 			owner_->row_item_appearance_changed(false, true);
 		}
 	}else{
-		signal_height_ = 2 * QFontMetrics(QApplication::font()).height();
+		signal_height_ = 40;
 		base_->height_ = signal_height();
 	}
 	
@@ -382,6 +382,32 @@ void LogicSignal::paint_mid(QPainter &p, ViewItemPaintParams &pp)
 void LogicSignal::paint_fore(QPainter &p, ViewItemPaintParams &pp)
 {
 	if (base_->enabled()) {
+		const int y = get_visual_y();
+		const float high_y = y + high_level_offset_;
+		const float low_y = y + low_level_offset_;
+
+		const QFont old_font = p.font();
+		QFont level_font = old_font;
+		level_font.setPointSizeF(qMax(7.0, level_font.pointSizeF() - 2.0));
+		level_font.setBold(true);
+		p.setFont(level_font);
+		const QFontMetrics level_metrics(level_font);
+
+		auto draw_level = [&](const char *text, float center_y) {
+			const qreal text_width = level_metrics.horizontalAdvance(text) + 8;
+			const QRectF box(pp.left() + 3,
+				center_y - level_metrics.height() / 2.0,
+				text_width, level_metrics.height());
+			p.setPen(Qt::NoPen);
+			p.setBrush(QColor(16, 19, 24, 185));
+			p.drawRoundedRect(box, 2, 2);
+			p.setPen(base_->color().lighter(135));
+			p.drawText(box, Qt::AlignCenter, text);
+		};
+		draw_level("H", high_y);
+		draw_level("L", low_y);
+		p.setFont(old_font);
+
 		if (session_.trigger_mode() == Session::TriggerSimple && trigger_match_) {
 			// Draw the trigger marker
 			const int y = get_visual_y();
@@ -627,7 +653,7 @@ void LogicSignal::populate_popup_form(QWidget *parent, QFormLayout *form)
 	Signal::populate_popup_form(parent, form);
 
 	signal_height_sb_ = new QSpinBox(parent);
-	signal_height_sb_->setRange(5, 50);
+	signal_height_sb_->setRange(5, 200);
 	signal_height_sb_->setSingleStep(5);
 	signal_height_sb_->setSuffix(tr(" pixels"));
 	signal_height_sb_->setValue(signal_height_);
@@ -744,6 +770,12 @@ void LogicSignal::on_setting_changed(const QString &key, const QVariant &value)
 
 	if (key == GlobalSettings::Key_View_FillSignalHighAreaColor)
 		high_fill_color_ = QColor::fromRgba(value.value<uint32_t>());
+
+	if (key == GlobalSettings::Key_View_DefaultLogicHeight) {
+		const int height = value.toInt();
+		if (height >= 5 && height != signal_height_)
+			on_signal_height_changed(height);
+	}
 }
 
 void LogicSignal::on_trigger()
@@ -763,7 +795,7 @@ void LogicSignal::on_trigger()
 void LogicSignal::on_signal_height_changed(int height)
 {
 	const int min_height = 5;
-	const int max_height = 50;
+	const int max_height = 200;
 	signal_height_ = std::max(std::min(height, max_height), min_height);
 
 	if (owner_) {

@@ -385,7 +385,7 @@ QWidget *Settings::get_view_settings_form(QWidget *parent) const
 	trace_view_layout->addRow(tr("Default analog trace div height"), default_div_height_sb);
 
 	QSpinBox *default_logic_height_sb = new QSpinBox();
-	default_logic_height_sb->setRange(5, 1000);
+	default_logic_height_sb->setRange(5, 200);
 	default_logic_height_sb->setSuffix(tr(" pixels"));
 	default_logic_height_sb->setValue(
 		settings.value(GlobalSettings::Key_View_DefaultLogicHeight).toInt());

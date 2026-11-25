@@ -144,8 +144,15 @@ void GlobalSettings::set_defaults_where_needed()
 		setValue(Key_View_DefaultDivHeight,
 		3 * QFontMetrics(QApplication::font()).height());
 
-	if (!contains(Key_View_DefaultLogicHeight))
-		setValue(Key_View_DefaultLogicHeight, 20);
+	if (!contains(Key_View_DefaultLogicHeight)) {
+		setValue(Key_View_DefaultLogicHeight, 40);
+	} else if (value(Key_View_DefaultLogicHeight).toInt() == 20 &&
+			!contains("View_DefaultLogicHeightMigrated")) {
+		// The old default (20 px) was too small. Migrate it once; an
+		// explicit later choice is preserved.
+		setValue(Key_View_DefaultLogicHeight, 40);
+		setValue("View_DefaultLogicHeightMigrated", true);
+	}
 
 	if (!contains(Key_View_ShowHoverMarker))
 		setValue(Key_View_ShowHoverMarker, false);
