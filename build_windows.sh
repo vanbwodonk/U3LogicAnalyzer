@@ -7,7 +7,7 @@
 #       mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,gdb} \
 #       mingw-w64-ucrt-x86_64-{glib2,glibmm,libusb,hidapi,libzip} \
 #       mingw-w64-ucrt-x86_64-{libserialport,libftdi,nettle} \
-#       mingw-w64-ucrt-x86_64-{boost,qt6-base,qt6-svg,qt6-tools,python,zip}
+#       mingw-w64-ucrt-x86_64-{boost,qt6-base,qt6-svg,python,zip}
 #
 # 产物: build/LogicAnalyzer-win64.zip
 #
@@ -75,7 +75,7 @@ if [ -z "$MINGW_PREFIX" ]; then
     fi
 fi
 export PATH="$MINGW_PREFIX/bin:$PATH"
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$MINGW_PREFIX/lib/pkgconfig"
 
 echo "============================================"
 echo " LogicAnalyzer (Windows/MSYS2) Build"

@@ -42,7 +42,6 @@ makedepends=(
     'ninja'
     'pkgconf'
     'boost'
-    'qt6-tools'
 )
 optdepends=(
 )
@@ -146,7 +145,7 @@ build() {
         -DENABLE_SIGNALS=OFF \
         -DSTATIC_PKGDEPS_LIBS=OFF
     then
-        error "CMake configure failed for U3LogicAnalyzer. If Qt6 was not found, install qt6-base, qt6-svg and qt6-tools (or run makepkg -s without --nodeps)."
+        error "CMake configure failed for U3LogicAnalyzer. If Qt6 was not found, install qt6-base and qt6-svg (or run makepkg -s without --nodeps)."
     fi
     cmake --build build/app -j "$jobs"
 }

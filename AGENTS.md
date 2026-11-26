@@ -20,8 +20,7 @@ vendored in-tree:
 - `build_macos.sh`, `build_linux.sh`, `build_windows.sh`, `package_app.sh` —
   supported build and packaging entry points. `build_linux.sh` is the
   Linux-only helper (release/debug, separate `build/linux` tree).
-- `.github/workflows/build.yml` — macOS/Linux/Windows CI; `v*` tags create a
-  GitHub Release.
+- `.github/workflows/build.yml` — Linux CI; `v*` tags create a GitHub Release.
 
 Known USB IDs: CH32H417 `1a86:5537`, CH569 `1a86:8025`, CH32H417 HID/IAP mode
 `1a86:fe17`.
@@ -53,7 +52,7 @@ macOS packaging (macOS only): `./package_app.sh` creates
 `build/U3LogicAnalyzer.app`; `--dmg` also creates `build/U3LogicAnalyzer.dmg`.
 
 Dependencies: CMake (≥3.21 for the app, ≥3.10 for the bundled libraries), a
-C++17 compiler, Qt6 (Widgets, Gui, Svg, Network, LinguistTools), glib/glibmm-2.4, Boost
+C++17 compiler, Qt6 (Widgets, Gui, Svg, Network), glib/glibmm-2.4, Boost
 (filesystem, serialization), libusb, hidapi, libzip, and Python 3 development
 files. For the full driver set also install libserialport, libftdi1, nettle,
 libieee1284, and libbluetooth (BlueZ); CMake excludes drivers whose optional
@@ -79,8 +78,8 @@ signal support).
 
 ## Tests
 
-The scripts do **not** build tests, and CI does not run them. Against an
-existing `build/install` prefix:
+The scripts do not build tests by default, but CI builds and runs them on
+Linux. Against an existing `build/install` prefix:
 
 ```bash
 export PKG_CONFIG_PATH="$PWD/build/install/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
@@ -98,8 +97,7 @@ device-presence logic, software-update parsing, ruler). Add new tests under
 
 - `main.cpp` — CLI parsing, decoder-directory discovery, bootstrap, Windows
   dark title bar.
-- `pv/application.*` — app identity/version, language switching, decoder list,
-  About/version info.
+- `pv/application.*` — app identity/version, decoder list, About/version info.
 - `pv/mainwindow.*` — session/view lifecycle, USB hot-plug polling.
 - `pv/session.*` — acquisition state machine, data feed, save/restore.
 - `pv/data/` — signals, chunked logic/analog segments, decode stack.
@@ -138,12 +136,8 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   comment.
 - In C code use `g_try_malloc()` / `g_free()` and glib types; avoid
   `g_malloc()` (it aborts on OOM).
-- User-visible strings go through `tr()`. Translations live in `l10n/*.ts`
-  (`zh_cn.ts` is the Chinese translation and `en.ts` translates the
-  Chinese-origin strings for English/fallback UI). The build only runs
-  `lrelease` (`qt_add_translation`); run `lupdate` manually after changing
-  strings and fill new entries. Do not use `qt_add_translations()` (plural),
-  which runs `lupdate` and rewrites the `.ts` files during builds.
+- The application is English-only. User-visible strings go through `tr()`
+  but no translation catalogs or language switching are maintained.
 - New `Q_OBJECT` headers must be added to the `pulseview_HEADERS` list (and to
   the parallel test lists) so AUTOMOC processes them; add new sources to
   `pulseview_SOURCES`.
@@ -220,5 +214,4 @@ device-presence logic, software-update parsing, ruler). Add new tests under
   published only for `v*` tags; do not tag or push unless asked.
 - Firmware is built with MounRiver Studio (RISC-V toolchain), not CMake.
   `firmware/**/obj/` contains committed build outputs — do not "clean" them.
-- `README.md` and `README_zh.md` are paired; keep both in sync for user-facing
-  feature/build changes.
+- `README.md` is English-only; there is no separate Chinese README.

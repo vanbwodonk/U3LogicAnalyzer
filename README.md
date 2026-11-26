@@ -1,6 +1,5 @@
 # U3LogicAnalyzer
 
-[中文文档](README_zh.md) | **English**
 
 U3LogicAnalyzer is the PC host software for the CH32H417 / CH569 USB logic
 analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
@@ -42,7 +41,7 @@ analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
   CH375 mode is Windows-only)
 - Software updates through GitHub Releases
 - Protocol-decoder channel-assignment dialog
-- Chinese UI, dark theme, new toolbar icons
+- English UI, dark theme, new toolbar icons
 - 130 protocol decoders
 - Decoder auto-discovery - no `SIGROKDECODE_DIR` environment variable needed
 - macOS .app / DMG packaging
@@ -84,7 +83,7 @@ Linux (Debian/Ubuntu example):
 
 ```bash
     sudo apt install build-essential cmake ninja-build pkg-config \
-      qt6-base-dev qt6-tools-dev qt6-l10n-tools libqt6svg6-dev libglib2.0-dev \
+      qt6-base-dev libqt6svg6-dev libglib2.0-dev \
       libglibmm-2.4-dev libusb-1.0-0-dev libserialport-dev \
       libftdi1-dev libnettle-dev libieee1284-3-dev libbluetooth-dev \
       libhidapi-dev libzip-dev libboost-dev libboost-filesystem-dev \
@@ -147,9 +146,9 @@ Linux / Windows on push to master and pull requests. Pushing a `v*` tag
 
 ## Changes vs upstream PulseView
 
-1. U3 customizations: renamed to U3LogicAnalyzer, Chinese UI, CH32H417/CH569
+1. U3 customizations: renamed to U3LogicAnalyzer, English UI, CH32H417/CH569
    support, IAP firmware-upgrade dialog, decoder-channel dialog, dark theme,
-   new toolbar icons, zh_CN translations.
+   new toolbar icons.
    The bundled libsigrok now contains the complete upstream hardware driver
    set (FX2LAFW/Saleae, DreamSourceLab, Hantek, serial/SCPI instruments, ...)
    alongside the CH32H417 driver; the GUI scans all drivers.

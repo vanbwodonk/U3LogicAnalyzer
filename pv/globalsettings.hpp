@@ -55,7 +55,6 @@ class GlobalSettings : public QSettings
 	Q_OBJECT
 
 public:
-	static const QString Key_General_Language;
 	static const QString Key_General_Theme;
 	static const QString Key_General_Style;
 	static const QString Key_General_SaveWithSetup;
@@ -104,7 +103,6 @@ public:
 	static bool current_theme_is_dark();
 	void apply_theme();
 
-	void apply_language();
 
 	static void add_change_handler(GlobalSettingsInterface *cb);
 	static void remove_change_handler(GlobalSettingsInterface *cb);

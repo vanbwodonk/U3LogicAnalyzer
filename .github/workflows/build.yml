@@ -14,88 +14,44 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: macOS
-            os: macos-latest
-          - name: Linux
-            os: ubuntu-latest
-          - name: Windows
-            os: windows-latest
+    name: Linux
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSYS2 (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          # Do not run a full rolling pacman -Syu on hosted runners; it can
-          # fail on package conflicts before the requested packages install.
-          update: false
-          install: >-
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-pkgconf
-            mingw-w64-ucrt-x86_64-glib2
-            mingw-w64-ucrt-x86_64-glibmm
-            mingw-w64-ucrt-x86_64-libusb
-            mingw-w64-ucrt-x86_64-hidapi
-            mingw-w64-ucrt-x86_64-libzip
-            mingw-w64-ucrt-x86_64-libserialport
-            mingw-w64-ucrt-x86_64-libftdi
-            mingw-w64-ucrt-x86_64-nettle
-            mingw-w64-ucrt-x86_64-boost
-            mingw-w64-ucrt-x86_64-qt6-base
-            mingw-w64-ucrt-x86_64-qt6-svg
-            mingw-w64-ucrt-x86_64-qt6-tools
-            mingw-w64-ucrt-x86_64-python
-            zip
-
-      - name: Install macOS dependencies
-        if: runner.os == 'macOS'
-        run: |
-          brew install pkgconf cmake ninja qt glibmm@2.66 glib libusb \
-            libserialport libftdi nettle hidapi libzip boost python@3.14
-
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build pkg-config \
-            qt6-base-dev qt6-tools-dev qt6-l10n-tools libqt6svg6-dev \
+            qt6-base-dev libqt6svg6-dev \
             libglib2.0-dev libglibmm-2.4-dev libusb-1.0-0-dev \
             libserialport-dev libftdi1-dev nettle-dev libieee1284-3-dev \
             libbluetooth-dev libhidapi-dev libzip-dev libboost-dev \
-            libboost-filesystem-dev libboost-serialization-dev python3-dev
+            libboost-filesystem-dev libboost-serialization-dev \
+            libboost-test-dev python3-dev
 
-      - name: Build (macOS / Linux)
-        if: runner.os != 'Windows'
+      - name: Build
         env:
           LIBSIGROK_URL: ${{ vars.LIBSIGROK_URL }}
           LIBSIGROKDECODE_URL: ${{ vars.LIBSIGROKDECODE_URL }}
         run: ./build_macos.sh
 
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        env:
-          LIBSIGROK_URL: ${{ vars.LIBSIGROK_URL }}
-          LIBSIGROKDECODE_URL: ${{ vars.LIBSIGROKDECODE_URL }}
-        run: ./build_windows.sh
-
-      - name: Package macOS app + DMG
-        if: runner.os == 'macOS'
-        run: ./package_app.sh --dmg
+      - name: Run tests
+        run: |
+          set -e
+          PREFIX="$PWD/build/install"
+          export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+          cmake -S . -B build/test_build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$PREFIX" \
+            -DENABLE_TESTS=ON -DENABLE_DECODE=ON \
+            -DENABLE_FLOW=OFF -DENABLE_SIGNALS=OFF \
+            -DDISABLE_WERROR=ON
+          cmake --build build/test_build -j 4 --target pulseview-test
+          ctest --test-dir build/test_build --output-on-failure
 
       - name: Package Linux tarball
-        if: runner.os == 'Linux'
         run: |
           mkdir -p dist/U3LogicAnalyzer-linux/bin \
                    dist/U3LogicAnalyzer-linux/share/libsigrokdecode
@@ -104,22 +60,16 @@ jobs:
                 dist/U3LogicAnalyzer-linux/share/libsigrokdecode/
           tar -C dist -czf build/U3LogicAnalyzer-linux.tar.gz U3LogicAnalyzer-linux
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}-${{ github.ref_name }}
-          path: |
-            build/U3LogicAnalyzer.dmg
-            build/U3LogicAnalyzer-linux.tar.gz
-            build/LogicAnalyzer-win64.zip
-          if-no-files-found: warn
+          name: Linux-${{ github.ref_name }}
+          path: build/U3LogicAnalyzer-linux.tar.gz
+          if-no-files-found: error
 
       - name: Publish release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            build/U3LogicAnalyzer.dmg
-            build/U3LogicAnalyzer-linux.tar.gz
-            build/LogicAnalyzer-win64.zip
+          files: build/U3LogicAnalyzer-linux.tar.gz
           generate_release_notes: true

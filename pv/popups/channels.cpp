@@ -1463,7 +1463,7 @@ void Channels::checkbox_toggled(bool state)
 			msg.setIcon(QMessageBox::Information);
 			msg.setWindowTitle(tr("Information"));
 			msg.setText(tr("The current mode does not support opening this channel."));
-			msg.addButton(tr("确定"), QMessageBox::AcceptRole);
+			msg.addButton(tr("OK"), QMessageBox::AcceptRole);
 			msg.exec();
 			checkBox->setChecked(false);
 		}

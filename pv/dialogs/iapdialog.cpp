@@ -87,18 +87,18 @@ void IAPDialog::set_firmware_path(const QString &path)
 
 void IAPDialog::setup_ui()
 {
-    setWindowTitle(tr("固件升级"));
+    setWindowTitle(tr("Firmware Update"));
     setMinimumWidth(500);
     setMinimumHeight(400);
 
     QVBoxLayout *main_layout = new QVBoxLayout(this);
 
     QGridLayout *file_layout = new QGridLayout();
-    file_layout->addWidget(new QLabel(tr("固件文件:")), 0, 0);
+    file_layout->addWidget(new QLabel(tr("Firmware file:")), 0, 0);
     file_edit_ = new QLineEdit();
-    file_edit_->setPlaceholderText(tr("选择BIN或HEX格式固件文件"));
+    file_edit_->setPlaceholderText(tr("Select a BIN or HEX firmware file"));
     file_layout->addWidget(file_edit_, 0, 1);
-    browse_btn_ = new QPushButton(tr("浏览..."));
+    browse_btn_ = new QPushButton(tr("Browse..."));
     file_layout->addWidget(browse_btn_, 0, 2);
     main_layout->addLayout(file_layout);
 
@@ -107,12 +107,12 @@ void IAPDialog::setup_ui()
     progress_bar_->setRange(0, 100);
     progress_bar_->setValue(0);
     progress_layout->addWidget(progress_bar_);
-    status_label_ = new QLabel(tr("就绪"));
+    status_label_ = new QLabel(tr("Ready"));
     status_label_->setMinimumWidth(100);
     progress_layout->addWidget(status_label_);
     main_layout->addLayout(progress_layout);
 
-    QLabel *log_label = new QLabel(tr("升级日志:"));
+    QLabel *log_label = new QLabel(tr("Update log:"));
     main_layout->addWidget(log_label);
     log_text_ = new QTextEdit();
     log_text_->setReadOnly(true);
@@ -121,9 +121,9 @@ void IAPDialog::setup_ui()
 
     QHBoxLayout *btn_layout = new QHBoxLayout();
     btn_layout->addStretch();
-    start_btn_ = new QPushButton(tr("开始升级"));
+    start_btn_ = new QPushButton(tr("Start Update"));
     start_btn_->setDefault(true);
-    cancel_btn_ = new QPushButton(tr("取消"));
+    cancel_btn_ = new QPushButton(tr("Cancel"));
     btn_layout->addWidget(start_btn_);
     btn_layout->addWidget(cancel_btn_);
     main_layout->addLayout(btn_layout);
@@ -149,9 +149,9 @@ void IAPDialog::on_browse_clicked()
 {
     QString file_name = QFileDialog::getOpenFileName(
         this,
-        tr("选择固件文件"),
+        tr("Select Firmware File"),
         QString(),
-        tr("固件文件 (*.bin *.hex);;所有文件 (*.*)")
+        tr("Firmware files (*.bin *.hex);;All files (*.*)")
     );
 
     if (!file_name.isEmpty()) {
@@ -165,12 +165,12 @@ void IAPDialog::on_start_clicked()
     firmware_path_ = file_edit_->text();
 
     if (firmware_path_.isEmpty()) {
-        QMessageBox::warning(this, tr("错误"), tr("请选择固件文件"));
+        QMessageBox::warning(this, tr("Error"), tr("Please select a firmware file"));
         return;
     }
 
     if (!QFile::exists(firmware_path_)) {
-        QMessageBox::warning(this, tr("错误"), tr("固件文件不存在"));
+        QMessageBox::warning(this, tr("Error"), tr("The firmware file does not exist"));
         return;
     }
 
@@ -182,10 +182,10 @@ void IAPDialog::on_start_clicked()
     start_btn_->setEnabled(false);
     browse_btn_->setEnabled(false);
     file_edit_->setEnabled(false);
-    cancel_btn_->setText(tr("取消"));
+    cancel_btn_->setText(tr("Cancel"));
 
-    log(tr("开始固件升级..."));
-    log(tr("设备索引: %1").arg(device_index_));
+    log(tr("Starting firmware update..."));
+    log(tr("Device index: %1").arg(device_index_));
     log(tr("IAP VID: 0x%1, PID: 0x%2").arg(iap_vid_, 4, 16, QChar('0')).arg(iap_pid_, 4, 16, QChar('0')));
 
     /* 创建工作线程 */
@@ -208,7 +208,7 @@ void IAPDialog::on_cancel_clicked()
 {
     if (is_upgrading_ && worker_) {
         worker_->cancel();
-        log(tr("正在取消升级..."));
+        log(tr("Cancelling update..."));
     } else {
         reject();
     }
@@ -230,19 +230,19 @@ void IAPDialog::on_upgrade_finished(bool success)
     start_btn_->setEnabled(true);
     browse_btn_->setEnabled(true);
     file_edit_->setEnabled(true);
-    cancel_btn_->setText(tr("关闭"));
+    cancel_btn_->setText(tr("Close"));
 
     worker_ = nullptr;
     worker_thread_ = nullptr;
 
     if (success) {
-        update_progress(100, tr("升级成功"));
-        log(tr("固件升级成功！"));
-        QMessageBox::information(this, tr("成功"), tr("固件升级成功！\n设备将重新启动。"));
+        update_progress(100, tr("Update Successful"));
+        log(tr("Firmware update succeeded!"));
+        QMessageBox::information(this, tr("Success"), tr("Firmware update succeeded!\nThe device will restart."));
     } else {
-        update_progress(0, tr("升级失败"));
-        log(tr("固件升级失败！"));
-        QMessageBox::critical(this, tr("失败"), tr("固件升级失败！\n请检查设备连接和固件文件。"));
+        update_progress(0, tr("Update Failed"));
+        log(tr("Firmware update failed!"));
+        QMessageBox::critical(this, tr("Failure"), tr("Firmware update failed!\nCheck the device connection and firmware file."));
     }
 }
 
@@ -292,7 +292,7 @@ bool IAPWorker::init_hid()
     static bool hid_initialized = false;
     if (!hid_initialized) {
         if (::hid_init() != 0) {
-            log(tr("hidapi初始化失败"));
+            log(tr("hidapi initialization failed"));
             return false;
         }
         hid_initialized = true;
@@ -300,13 +300,13 @@ bool IAPWorker::init_hid()
 
     hid_handle_ = ::hid_open(iap_vid_, iap_pid_, NULL);
     if (!hid_handle_) {
-        log(tr("未找到IAP设备 (VID=0x%1, PID=0x%2)")
+        log(tr("No IAP device found (VID=0x%1, PID=0x%2)")
             .arg(iap_vid_, 4, 16, QChar('0'))
             .arg(iap_pid_, 4, 16, QChar('0')));
         return false;
     }
 
-    log(tr("找到IAP设备"));
+    log(tr("IAP device found"));
     return true;
 }
 
@@ -340,7 +340,7 @@ bool IAPWorker::hid_write(const uint8_t *data, size_t len)
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("写入被取消"));
+                log(tr("Write cancelled"));
                 ::hid_set_nonblocking((hid_device*)hid_handle_, 0);
                 return false;
             }
@@ -356,13 +356,13 @@ bool IAPWorker::hid_write(const uint8_t *data, size_t len)
             elapsed += check_interval;
             continue;
         }
-        log(tr("HID写入失败"));
+        log(tr("HID write failed"));
         ::hid_set_nonblocking((hid_device*)hid_handle_, 0);
         return false;
     }
 
     ::hid_set_nonblocking((hid_device*)hid_handle_, 0);
-    log(tr("HID写入超时 (%1ms)").arg(timeout_ms));
+    log(tr("HID write timed out (%1 ms)").arg(timeout_ms));
     return false;
 }
 
@@ -379,7 +379,7 @@ bool IAPWorker::hid_read(uint8_t *data, size_t len, int timeout_ms)
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("读取被取消"));
+                log(tr("Read cancelled"));
                 return false;
             }
         }
@@ -395,11 +395,11 @@ bool IAPWorker::hid_read(uint8_t *data, size_t len, int timeout_ms)
             elapsed += check_interval;
             continue;
         }
-        log(tr("HID读取错误"));
+        log(tr("HID read error"));
         return false;
     }
 
-    log(tr("HID读取超时 (%1ms)").arg(timeout_ms));
+    log(tr("HID read timed out (%1 ms)").arg(timeout_ms));
     return false;
 }
 
@@ -408,13 +408,13 @@ bool IAPWorker::enter_iap_mode()
     {
         QMutexLocker locker(&mutex_);
         if (cancelled_) {
-            log(tr("用户取消升级"));
+            log(tr("Update cancelled by user"));
             return false;
         }
     }
 
 #ifdef _WIN32
-    log(tr("发送IAP模式进入命令..."));
+    log(tr("Sending IAP mode entry command..."));
 
     uint8_t cmd[64] = {0};
     cmd[0] = 0xAE;  /* CMD_ENTER_IAP */
@@ -422,18 +422,18 @@ bool IAPWorker::enter_iap_mode()
 
     unsigned long io_length = 64;
     if (!ch375_write_endpoint(device_index_, 1, cmd, &io_length)) {
-        log(tr("发送IAP命令失败"));
+        log(tr("Failed to send IAP command"));
         return false;
     }
 
-    log(tr("IAP命令已发送，关闭CH375设备..."));
+    log(tr("IAP command sent; closing CH375 device..."));
 
     ch375_close_device(device_index_);
 
-    log(tr("CH375设备已关闭，等待设备切换模式..."));
+    log(tr("CH375 device closed; waiting for the device to switch modes..."));
 #else
     /* CH375 驱动模式仅支持 Windows；macOS/Linux 上设备需已处于 HID/IAP 模式 */
-    log(tr("当前平台不支持CH375模式，请确保设备已处于HID/IAP模式"));
+    log(tr("CH375 mode is not supported on this platform; make sure the device is in HID/IAP mode"));
     return false;
 #endif
 
@@ -442,7 +442,7 @@ bool IAPWorker::enter_iap_mode()
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("用户取消升级"));
+                log(tr("Update cancelled by user"));
                 return false;
             }
         }
@@ -456,13 +456,13 @@ bool IAPWorker::erase_flash(uint32_t start_addr)
     {
         QMutexLocker locker(&mutex_);
         if (cancelled_) {
-            log(tr("用户取消升级"));
+            log(tr("Update cancelled by user"));
             return false;
         }
     }
 
-    log(tr("擦除FLASH...地址: 0x%1").arg(start_addr, 8, 16, QChar('0')));
-    update_progress(20, tr("擦除FLASH..."));
+    log(tr("Erasing flash... address: 0x%1").arg(start_addr, 8, 16, QChar('0')));
+    update_progress(20, tr("Erasing flash..."));
 
     uint8_t cmd[64] = {0};
     cmd[0] = CMD_IAP_ERASE;
@@ -473,29 +473,29 @@ bool IAPWorker::erase_flash(uint32_t start_addr)
     cmd[5] = (start_addr >> 24) & 0xFF;
 
     if (!hid_write(cmd, 6)) {
-        log(tr("发送擦除命令失败"));
+        log(tr("Failed to send erase command"));
         return false;
     }
 
     uint8_t resp[64] = {0};
     if (!hid_read(resp, 2, 5000)) {
-        log(tr("擦除响应超时"));
+        log(tr("Erase response timed out"));
         return false;
     }
 
     if (resp[0] != 0x00 || resp[1] != 0x00) {
-        log(tr("擦除失败，错误码: %1").arg(resp[1]));
+        log(tr("Erase failed; error code: %1").arg(resp[1]));
         return false;
     }
 
-    log(tr("擦除成功"));
+    log(tr("Erase succeeded"));
     return true;
 }
 
 bool IAPWorker::program_flash(const uint8_t *data, size_t len)
 {
-    log(tr("编程FLASH...数据长度: %1字节").arg(len));
-    update_progress(30, tr("编程FLASH..."));
+    log(tr("Programming flash... data length: %1 bytes").arg(len));
+    update_progress(30, tr("Programming flash..."));
 
     size_t offset = 0;
     size_t total = len;
@@ -506,7 +506,7 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("用户取消升级"));
+                log(tr("Update cancelled by user"));
                 return false;
             }
         }
@@ -520,7 +520,7 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
 
         size_t cmd_len = 2 + chunk_size;
         if (!hid_write(cmd, cmd_len)) {
-            log(tr("写入数据失败，偏移: %1").arg(offset));
+            log(tr("Failed to write data at offset %1").arg(offset));
             retry_count++;
             if (retry_count > 3) {
                 return false;
@@ -531,7 +531,7 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
 
         uint8_t resp[64] = {0};
         if (!hid_read(resp, 2, HID_TIMEOUT_MS)) {
-            log(tr("编程响应超时，偏移: %1").arg(offset));
+            log(tr("Programming response timed out at offset %1").arg(offset));
             retry_count++;
             if (retry_count > 3) {
                 return false;
@@ -541,7 +541,7 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
         }
 
         if (resp[0] != 0x00 || resp[1] != 0x00) {
-            log(tr("编程失败，错误码: %1，偏移: %2").arg(resp[1]).arg(offset));
+            log(tr("Programming failed; error code: %1, offset: %2").arg(resp[1]).arg(offset));
             retry_count++;
             if (retry_count > 3) {
                 return false;
@@ -555,7 +555,7 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
 
         /* 更新进度 (30% - 70%) */
         int progress = 30 + (int)(40 * offset / total);
-        update_progress(progress, tr("编程FLASH... %1%").arg(offset * 100 / total));
+        update_progress(progress, tr("Programming flash... %1%").arg(offset * 100 / total));
     }
 
     uint8_t cmd[64] = {0};
@@ -566,14 +566,14 @@ bool IAPWorker::program_flash(const uint8_t *data, size_t len)
     uint8_t resp[64] = {0};
     hid_read(resp, 2, HID_TIMEOUT_MS);
 
-    log(tr("编程完成"));
+    log(tr("Programming complete"));
     return true;
 }
 
 bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t len)
 {
-    log(tr("校验FLASH..."));
-    update_progress(70, tr("校验FLASH..."));
+    log(tr("Verifying flash..."));
+    update_progress(70, tr("Verifying flash..."));
 
     size_t offset = 0;
     size_t total = len;
@@ -585,7 +585,7 @@ bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t le
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("用户取消升级"));
+                log(tr("Update cancelled by user"));
                 return false;
             }
         }
@@ -603,7 +603,7 @@ bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t le
 
         size_t cmd_len = 6 + chunk_size;  /* 命令头(2)+地址(4)+数据长度 */
         if (!hid_write(cmd, cmd_len)) {
-            log(tr("发送校验命令失败，偏移: %1").arg(offset));
+            log(tr("Failed to send verify command at offset %1").arg(offset));
             retry_count++;
             if (retry_count > 3) {
                 return false;
@@ -614,7 +614,7 @@ bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t le
 
         uint8_t resp[64] = {0};
         if (!hid_read(resp, 2, HID_TIMEOUT_MS)) {
-            log(tr("校验响应超时，偏移: %1").arg(offset));
+            log(tr("Verify response timed out at offset %1").arg(offset));
             retry_count++;
             if (retry_count > 3) {
                 return false;
@@ -624,7 +624,7 @@ bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t le
         }
 
         if (resp[0] != 0x00 || resp[1] != 0x00) {
-            log(tr("校验失败，错误码: %1，地址: 0x%2")
+            log(tr("Verification failed; error code: %1, address: 0x%2")
                 .arg(resp[1])
                 .arg(verify_addr, 8, 16, QChar('0')));
             retry_count++;
@@ -641,36 +641,36 @@ bool IAPWorker::verify_flash(uint32_t start_addr, const uint8_t *data, size_t le
 
         /* 更新进度 (70% - 95%) */
         int progress = 70 + (int)(25 * offset / total);
-        update_progress(progress, tr("校验FLASH... %1%").arg(offset * 100 / total));
+        update_progress(progress, tr("Verifying flash... %1%").arg(offset * 100 / total));
     }
 
-    log(tr("校验成功"));
+    log(tr("Verification succeeded"));
     return true;
 }
 
 bool IAPWorker::end_upgrade()
 {
-    log(tr("发送升级结束命令..."));
-    update_progress(95, tr("完成升级..."));
+    log(tr("Sending update completion command..."));
+    update_progress(95, tr("Completing update..."));
 
     uint8_t cmd[64] = {0};
     cmd[0] = CMD_IAP_END;
     cmd[1] = 0;
 
     if (!hid_write(cmd, 2)) {
-        log(tr("发送结束命令失败"));
+        log(tr("Failed to send completion command"));
         return false;
     }
 
-    log(tr("升级结束命令已发送"));
+    log(tr("Update completion command sent"));
 
     uint8_t resp[64] = {0};
     if (hid_read(resp, 2, 8000)) {
         if (resp[0] == CMD_IAP_SUCC) {
-            log(tr("设备确认升级完成"));
+            log(tr("Device confirmed update completion"));
         }
     } else {
-        log(tr("设备已重启(无响应为正常情况)"));
+        log(tr("Device restarted (no response is normal)"));
     }
 
     return true;
@@ -680,7 +680,7 @@ bool IAPWorker::read_firmware_file(QByteArray &out_data, uint32_t &start_addr)
 {
     QFile file(firmware_path_);
     if (!file.open(QIODevice::ReadOnly)) {
-        log(tr("无法打开固件文件: %1").arg(firmware_path_));
+        log(tr("Unable to open firmware file: %1").arg(firmware_path_));
         return false;
     }
 
@@ -688,18 +688,18 @@ bool IAPWorker::read_firmware_file(QByteArray &out_data, uint32_t &start_addr)
     file.close();
 
     if (firmware_path_.toLower().endsWith(".hex")) {
-        log(tr("检测到HEX格式文件，正在转换..."));
+        log(tr("HEX file detected; converting..."));
         if (!hex_to_bin(file_data, out_data, start_addr)) {
-            log(tr("HEX转换失败"));
+            log(tr("HEX conversion failed"));
             return false;
         }
-        log(tr("HEX转换成功，起始地址: 0x%1, 数据大小: %2字节")
+        log(tr("HEX conversion succeeded; start address: 0x%1, data size: %2 bytes")
             .arg(start_addr, 8, 16, QChar('0'))
             .arg(out_data.size()));
     } else {
         out_data = file_data;
         start_addr = 0;
-        log(tr("读取BIN文件，数据大小: %1字节").arg(out_data.size()));
+        log(tr("Read BIN file; data size: %1 bytes").arg(out_data.size()));
     }
 
     return true;
@@ -769,7 +769,7 @@ void IAPWorker::do_work()
     bool success = false;
     uint32_t start_addr = 0;
 
-    update_progress(5, tr("读取固件文件..."));
+    update_progress(5, tr("Reading firmware file..."));
     QByteArray firmware_data;
     if (!read_firmware_file(firmware_data, start_addr)) {
         Q_EMIT finished(false);
@@ -777,30 +777,30 @@ void IAPWorker::do_work()
     }
 
     if (firmware_data.isEmpty()) {
-        log(tr("固件数据为空"));
+        log(tr("Firmware data is empty"));
         Q_EMIT finished(false);
         return;
     }
 
     if (already_in_hid_mode_) {
-        log(tr("设备已处于HID/IAP模式，跳过模式切换"));
-        update_progress(10, tr("设备已处于IAP模式..."));
+        log(tr("Device is already in HID/IAP mode; skipping mode switch"));
+        update_progress(10, tr("Device is already in IAP mode..."));
     } else {
-        update_progress(10, tr("进入IAP模式..."));
+        update_progress(10, tr("Entering IAP mode..."));
         if (!enter_iap_mode()) {
             Q_EMIT finished(false);
             return;
         }
     }
 
-    update_progress(15, tr("查找HID设备..."));
+    update_progress(15, tr("Searching for HID device..."));
 
     for (int i = 0; i < 10; i++) {
         QThread::msleep(100);
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("用户取消升级"));
+                log(tr("Update cancelled by user"));
                 close_hid();
                 Q_EMIT finished(false);
                 return;
@@ -813,7 +813,7 @@ void IAPWorker::do_work()
         {
             QMutexLocker locker(&mutex_);
             if (cancelled_) {
-                log(tr("用户取消升级"));
+                log(tr("Update cancelled by user"));
                 close_hid();
                 Q_EMIT finished(false);
                 return;
@@ -824,12 +824,12 @@ void IAPWorker::do_work()
             break;
         }
         retry_count++;
-        log(tr("等待HID设备... (%1/10)").arg(retry_count));
+        log(tr("Waiting for HID device... (%1/10)").arg(retry_count));
         QThread::msleep(500);
     }
 
     if (!hid_handle_) {
-        log(tr("无法找到IAP HID设备"));
+        log(tr("Unable to find the IAP HID device"));
         Q_EMIT finished(false);
         return;
     }
@@ -862,10 +862,10 @@ void IAPWorker::do_work()
         return;
     }
 
-    /* 8. 关闭HID */
+    /* 8. CloseHID */
     close_hid();
 
-    update_progress(100, tr("升级完成"));
+    update_progress(100, tr("Update complete"));
     success = true;
 
     Q_EMIT finished(success);

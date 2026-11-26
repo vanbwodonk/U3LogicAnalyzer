@@ -329,7 +329,7 @@ namespace pv
 			connect(menu_file_import, SIGNAL(format_selected(shared_ptr<sigrok::InputFormat>)),
 					this, SLOT(import_file(shared_ptr<sigrok::InputFormat>)));
 			action_connect_->setText(tr("&Connect to Device..."));
-			action_connect_->setToolTip(""); // 去除悬浮提示
+			action_connect_->setToolTip(""); // Remove hover tooltip
 			// connect(action_connect_, SIGNAL(triggered(bool)),
 			// 	this, SLOT(on_actionConnect_triggered()));
 
@@ -1575,7 +1575,7 @@ namespace pv
 					threshold_ch32h417_default_ = 2.3f;
 				}
 
-				// 关闭CH32H417逻辑分析仪模式下的模拟通道A0/A1
+				// CloseCH32H417逻辑分析仪模式下的模拟通道A0/A1
 				for (const auto &sig : session_.signalbases())
 				{
 					if (sig->type() == data::SignalBase::AnalogChannel)
@@ -1798,7 +1798,7 @@ namespace pv
 		void MainBar::show_session_error(const QString text, const QString info_text)
 		{
 			QDialog dialog(this);
-			dialog.setWindowTitle(tr("错误"));
+			dialog.setWindowTitle(tr("Error"));
 
 			// 设置更大的字体
 			QFont font = dialog.font();
@@ -1832,7 +1832,7 @@ namespace pv
 			// 创建按钮
 			QHBoxLayout *buttonLayout = new QHBoxLayout();
 			buttonLayout->addStretch();
-			QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+			QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 			buttonLayout->addWidget(okBtn);
 			layout->addLayout(buttonLayout);
 
@@ -2586,7 +2586,7 @@ namespace pv
 			if (!is_ch32h417_usb && !is_ch32h417_hid)
 			{
 				QDialog dialog(this);
-				dialog.setWindowTitle(tr("警告"));
+				dialog.setWindowTitle(tr("Warning"));
 
 				// 设置更大的字体
 				QFont font = dialog.font();
@@ -2610,7 +2610,7 @@ namespace pv
 
 				// 创建文本标签
 				QLabel *label = new QLabel(&dialog);
-				label->setText(tr("当前设备不支持固件升级。\n请连接CH32H417设备后重试。"));
+				label->setText(tr("The current device does not support firmware updates.\nConnect a CH32H417 device and try again."));
 				label->setStyleSheet(QString("font-size: %1pt;").arg(font.pointSize()));
 				label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 				contentLayout->addWidget(label, 1);
@@ -2620,7 +2620,7 @@ namespace pv
 				// 创建按钮
 				QHBoxLayout *buttonLayout = new QHBoxLayout();
 				buttonLayout->addStretch();
-				QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+				QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 				buttonLayout->addWidget(okBtn);
 				layout->addLayout(buttonLayout);
 
@@ -2631,13 +2631,13 @@ namespace pv
 				return;
 			}
 
-			/* 弹出文件选择对话框，让用户选择固件文件 */
+			/* 弹出文件选择对话框，让用户Select Firmware File */
 			QString firmwarePath = QFileDialog::getOpenFileName(this,
-																tr("选择固件文件"),
+																tr("Select Firmware File"),
 																QCoreApplication::applicationDirPath(),
-																tr("固件文件 (*.bin *.BIN *.hex *.HEX);;所有文件 (*.*)"));
+																tr("Firmware files (*.bin *.BIN *.hex *.HEX);;All files (*.*)"));
 
-			/* 用户取消选择 */
+			/* 用户Cancel选择 */
 			if (firmwarePath.isEmpty())
 			{
 				return;
@@ -2650,12 +2650,12 @@ namespace pv
 
 			/* 创建进度对话框 */
 			QProgressDialog *progressDlg = new QProgressDialog(
-				tr("正在升级固件，请勿断开USB连接！"), tr("取消"), 0, 100, this);
-			progressDlg->setWindowTitle(tr("固件升级"));
+				tr("Updating firmware. Do not disconnect the USB cable!"), tr("Cancel"), 0, 100, this);
+			progressDlg->setWindowTitle(tr("Firmware Update"));
 			progressDlg->setWindowModality(Qt::WindowModal);
 			progressDlg->setMinimumDuration(0);
 			progressDlg->setValue(0);
-			progressDlg->setCancelButton(nullptr); /* 禁止取消 */
+			progressDlg->setCancelButton(nullptr); /* 禁止Cancel */
 
 			/* 设置IAP升级标志，防止热插拔检测误报设备掉线 */
 			iap_upgrading_ = true;
@@ -2672,7 +2672,7 @@ namespace pv
 				if (!success) {
 					iap_upgrading_ = false;
 					QDialog dialog(this);
-					dialog.setWindowTitle(tr("升级失败"));
+					dialog.setWindowTitle(tr("Update Failed"));
 
 					// 设置更大的字体
 					QFont font = dialog.font();
@@ -2696,7 +2696,7 @@ namespace pv
 
 					// 创建文本标签
 					QLabel *label = new QLabel(&dialog);
-					label->setText(tr("固件升级失败！\n请检查设备连接和固件文件。"));
+					label->setText(tr("Firmware update failed!\nCheck the device connection and firmware file."));
 					label->setStyleSheet(QString("font-size: %1pt;").arg(font.pointSize()));
 					label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 					contentLayout->addWidget(label, 1);
@@ -2706,7 +2706,7 @@ namespace pv
 					// 创建按钮
 					QHBoxLayout *buttonLayout = new QHBoxLayout();
 					buttonLayout->addStretch();
-					QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+					QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 					buttonLayout->addWidget(okBtn);
 					layout->addLayout(buttonLayout);
 
@@ -2730,7 +2730,7 @@ namespace pv
 			// 获取可执行文件所在目录
 			QString appDir = QCoreApplication::applicationDirPath();
 
-			QString pdfPath = appDir + "/doc/U3LogicAnalyzer逻辑分析仪使用手册.pdf";
+			QString pdfPath = appDir + "/doc/U3LogicAnalyzer_User_Manual.pdf";
 
 			pdfPath = QDir::toNativeSeparators(pdfPath);
 
@@ -2738,7 +2738,7 @@ namespace pv
 			if (!fileInfo.exists())
 			{
 				QDialog dialog(this);
-				dialog.setWindowTitle(tr("提示信息"));
+				dialog.setWindowTitle(tr("Notice"));
 
 				// 设置更大的字体
 				QFont font = dialog.font();
@@ -2762,7 +2762,7 @@ namespace pv
 
 				// 创建文本标签
 				QLabel *label = new QLabel(&dialog);
-				label->setText(tr("找不到PDF文件：\n%1\n\n请确认 doc 目录和用户手册文件是否存在。").arg(pdfPath));
+				label->setText(tr("PDF file not found:\n%1\n\nMake sure the doc directory and the user manual file exist.").arg(pdfPath));
 				label->setStyleSheet(QString("font-size: %1pt;").arg(font.pointSize()));
 				label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 				contentLayout->addWidget(label, 1);
@@ -2772,7 +2772,7 @@ namespace pv
 				// 创建按钮
 				QHBoxLayout *buttonLayout = new QHBoxLayout();
 				buttonLayout->addStretch();
-				QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+				QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 				buttonLayout->addWidget(okBtn);
 				layout->addLayout(buttonLayout);
 
@@ -2789,7 +2789,7 @@ namespace pv
 			if (!opened)
 			{
 				QDialog dialog(this);
-				dialog.setWindowTitle(tr("打开失败"));
+				dialog.setWindowTitle(tr("Open Failed"));
 
 				// 设置更大的字体
 				QFont font = dialog.font();
@@ -2813,7 +2813,7 @@ namespace pv
 
 				// 创建文本标签
 				QLabel *label = new QLabel(&dialog);
-				label->setText(tr("无法打开PDF文件，请确认系统已安装PDF阅读器。"));
+				label->setText(tr("Unable to open the PDF file. Make sure a PDF reader is installed."));
 				label->setStyleSheet(QString("font-size: %1pt;").arg(font.pointSize()));
 				label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 				contentLayout->addWidget(label, 1);
@@ -2823,7 +2823,7 @@ namespace pv
 				// 创建按钮
 				QHBoxLayout *buttonLayout = new QHBoxLayout();
 				buttonLayout->addStretch();
-				QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+				QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 				buttonLayout->addWidget(okBtn);
 				layout->addLayout(buttonLayout);
 
@@ -2838,7 +2838,7 @@ namespace pv
 		{
 			QString appName = "U3LogicAnalyzer";
 			QString appVersion = "v0.4";
-			QString website = "<a href='https://oshwhub.com/q2h2/project_bszkxrnf' style='color:#afe2ff;'>访问我们：https://oshwhub.com/q2h2/project_bszkxrnf</a>";
+			QString website = "<a href='https://oshwhub.com/q2h2/project_bszkxrnf' style='color:#afe2ff;'>Visit us: https://oshwhub.com/q2h2/project_bszkxrnf</a>";
 			QString text = QString(
 						   "<b>%1 (%2)</b><br/><br/>"
 						   "%3")
@@ -2847,7 +2847,7 @@ namespace pv
 						   .arg(website);
 
 			QDialog dialog(this);
-			dialog.setWindowTitle(tr("关于"));
+			dialog.setWindowTitle(tr("About"));
 
 			// 设置更大的字体
 			QFont font = dialog.font();
@@ -2883,7 +2883,7 @@ namespace pv
 			// 创建按钮
 			QHBoxLayout *buttonLayout = new QHBoxLayout();
 			buttonLayout->addStretch();
-			QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
+			QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
 			buttonLayout->addWidget(okBtn);
 			layout->addLayout(buttonLayout);
 
@@ -2916,7 +2916,7 @@ namespace pv
 				{
 					iap_upgrading_ = false;
 					QDialog *dialog = new QDialog(this);
-					dialog->setWindowTitle(tr("升级成功"));
+					dialog->setWindowTitle(tr("Update Successful"));
 
 					// 设置更大的字体
 					QFont font = dialog->font();
@@ -2940,7 +2940,7 @@ namespace pv
 
 					// 创建文本标签
 					QLabel *label = new QLabel(dialog);
-					label->setText(tr("固件升级成功！\n设备已重新启动。"));
+					label->setText(tr("Firmware update succeeded!\nThe device has restarted."));
 					label->setStyleSheet(QString("font-size: %1pt;").arg(font.pointSize()));
 					label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 					contentLayout->addWidget(label, 1);
@@ -2950,7 +2950,7 @@ namespace pv
 					// 创建按钮
 					QHBoxLayout *buttonLayout = new QHBoxLayout();
 					buttonLayout->addStretch();
-					QPushButton *okBtn = new QPushButton(tr("确定"), dialog);
+					QPushButton *okBtn = new QPushButton(tr("OK"), dialog);
 					buttonLayout->addWidget(okBtn);
 					layout->addLayout(buttonLayout);
 

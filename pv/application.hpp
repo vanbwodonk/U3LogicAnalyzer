@@ -26,7 +26,6 @@
 
 #include <QApplication>
 #include <QStringList>
-#include <QTranslator>
 #include <QProcess>
 #include <libsigrokcxx/libsigrokcxx.hpp>
 
@@ -37,18 +36,12 @@ using std::shared_ptr;
 using std::pair;
 using std::vector;
 
-class Application : public QApplication, public pv::GlobalSettingsInterface
+class Application : public QApplication
 {
 	Q_OBJECT
 
 public:
 	Application(int &argc, char* argv[]);
-
-	const QStringList get_languages() const;
-	const QString get_language_editors(const QString& language) const;
-	void switch_language(const QString& language);
-
-	void on_setting_changed(const QString &key, const QVariant &value);
 
 	void collect_version_info(pv::DeviceManager &device_manager);
 	void print_version_info();
@@ -75,7 +68,6 @@ private:
 	vector< pair<QString, QString> > output_format_list_;
 	vector< pair<QString, QString> > pd_list_;
 	QProcess * UpdateFwVersion_;
-	QTranslator app_translator_, en_translator_, qt_translator_, qtbase_translator_;
 	uint64_t hd_version_ = 0;
 };
 

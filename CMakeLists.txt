@@ -108,7 +108,7 @@ pkg_check_modules(PKGDEPS REQUIRED ${PKGDEPS})
 
 set(CMAKE_AUTOMOC TRUE)
 
-find_package(Qt6 6.5 COMPONENTS Core Gui LinguistTools Widgets Svg Network REQUIRED)
+find_package(Qt6 6.5 COMPONENTS Core Gui Widgets Svg Network REQUIRED)
 
 message(STATUS "Qt version: ${Qt6_VERSION}")
 
@@ -478,20 +478,6 @@ endif()
 qt_add_resources(pulseview_RESOURCES_RCC ${pulseview_RESOURCES})
 
 #===============================================================================
-#= Translations
-#-------------------------------------------------------------------------------
-
-file(GLOB TS_FILES ${CMAKE_SOURCE_DIR}/l10n/*.ts)
-set_property(SOURCE ${TS_FILES} PROPERTY OUTPUT_LOCATION ${CMAKE_BINARY_DIR}/l10n)
-if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-	configure_file("translations.qrc" "translations.qrc" COPYONLY)
-endif ()
-
-qt_add_translation(QM_FILES ${TS_FILES})
-
-qt_add_resources(pulseview_RESOURCES_RCC ${CMAKE_BINARY_DIR}/translations.qrc)
-
-#===============================================================================
 #= Global Definitions
 #-------------------------------------------------------------------------------
 
@@ -639,6 +625,15 @@ endif()
 #-------------------------------------------------------------------------------
 
 link_directories(${Boost_LIBRARY_DIRS})
+
+# Homebrew and other prefix installs put shared libraries in <prefix>/lib,
+# which is not on the default linker search path on macOS.
+foreach(_prefix ${CMAKE_PREFIX_PATH})
+	if(IS_DIRECTORY "${_prefix}/lib")
+		link_directories("${_prefix}/lib")
+	endif()
+endforeach()
+
 if(WIN32)
 	if(DEFINED ENV{MINGW_PREFIX})
 		link_directories($ENV{MINGW_PREFIX}/lib)
@@ -667,12 +662,16 @@ else()
 endif()
 
 if(WIN32)
-	# On Windows we need to statically link the libqsvg imageformat
-	# plugin (and the QtSvg component) for SVG graphics/icons to work.
-	# We also need QWindowsIntegrationPlugin.
-	add_definitions(-DQT_STATICPLUGIN)
-	list(APPEND PULSEVIEW_LINK_LIBS Qt6::QSvgPlugin)
-	list(APPEND PULSEVIEW_LINK_LIBS Qt6::QWindowsIntegrationPlugin)
+	# Link Qt's static plugins only when the Qt package actually provides
+	# them. Shared Qt6 builds rely on windeployqt to deploy the SVG and
+	# platform plugins; requiring these targets breaks shared MSYS2 Qt.
+	if(TARGET Qt6::QSvgPlugin)
+		add_definitions(-DQT_STATICPLUGIN)
+		list(APPEND PULSEVIEW_LINK_LIBS Qt6::QSvgPlugin)
+	endif()
+	if(TARGET Qt6::QWindowsIntegrationPlugin)
+		list(APPEND PULSEVIEW_LINK_LIBS Qt6::QWindowsIntegrationPlugin)
+	endif()
 	# Add hidapi for IAP dialog
 	list(APPEND PULSEVIEW_LINK_LIBS -lhidapi -lsetupapi -lusb-1.0 -ldwmapi)
 endif()
@@ -705,6 +704,7 @@ endif()
 pkg_check_modules(LIBUSB libusb-1.0)
 if(LIBUSB_FOUND)
 	include_directories(${LIBUSB_INCLUDE_DIRS})
+	link_directories(${LIBUSB_LIBRARY_DIRS})
 	list(APPEND PULSEVIEW_LINK_LIBS ${LIBUSB_LIBRARIES})
 else()
 	message(FATAL_ERROR "libusb not found (required by analyzer detection)")

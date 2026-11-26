@@ -118,7 +118,7 @@ bool MainWindow::checkSystemRequirements()
 	memFree = statex.ullAvailPhys * 1.0 / GB;
 	if (memFree < 4){
 		QDialog dialog(nullptr);
-		dialog.setWindowTitle(tr("提示"));
+		dialog.setWindowTitle(tr("Notice"));
 
 		// 设置更大的字体
 		QFont font = dialog.font();
@@ -141,7 +141,7 @@ bool MainWindow::checkSystemRequirements()
 
 		// 创建文本标签
 		QLabel *label = new QLabel(&dialog);
-		label->setText(tr("当前可用内存小于4GB，可能会影响使用效果。\n是否继续使用？"));
+		label->setText(tr("Less than 4 GB of memory is available, which may affect performance.\nContinue anyway?"));
 		label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 		contentLayout->addWidget(label, 1);
 
@@ -150,8 +150,8 @@ bool MainWindow::checkSystemRequirements()
 		// 创建按钮
 		QHBoxLayout *buttonLayout = new QHBoxLayout();
 		buttonLayout->addStretch();
-		QPushButton *okBtn = new QPushButton(tr("确定"), &dialog);
-		QPushButton *cancelBtn = new QPushButton(tr("取消"), &dialog);
+		QPushButton *okBtn = new QPushButton(tr("OK"), &dialog);
+		QPushButton *cancelBtn = new QPushButton(tr("Cancel"), &dialog);
 		buttonLayout->addWidget(okBtn);
 		buttonLayout->addWidget(cancelBtn);
 		layout->addLayout(buttonLayout);
@@ -418,7 +418,7 @@ void MainWindow::changeEvent(QEvent *event)
 	if (event->type() == QEvent::LanguageChange) {
 		retranslate_application_menu();
 		// Qt only sends LanguageChange to top-level widgets; forward it so
-		// toolbars (and their menus) can re-apply their translations too.
+		// toolbars (and their menus) can refresh their text too.
 		for (QWidget *widget : findChildren<QWidget *>())
 			QApplication::sendEvent(widget, event);
 	}
@@ -1272,7 +1272,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	if (!data_saved)
 	{
 		QDialog dialog(this);
-		dialog.setWindowTitle(tr("警告"));
+		dialog.setWindowTitle(tr("Warning"));
 
 		// 设置更大的字体
 		QFont font = dialog.font();
@@ -1286,8 +1286,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 		// 创建标签
 		QLabel *label = new QLabel(&dialog);
-		label->setText(tr("<h3>有未保存的采集数据</h3>"
-						  "<p>退出后数据将永久丢失。</p>"));
+		label->setText(tr("<h3>There is unsaved captured data</h3>"
+						  "<p>Closing now will permanently discard it.</p>"));
 		label->setTextFormat(Qt::RichText);
 		label->setAlignment(Qt::AlignCenter);
 		layout->addWidget(label);
@@ -1295,7 +1295,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 		// 创建按钮
 		QHBoxLayout *buttonLayout = new QHBoxLayout();
 		QPushButton *discardBtn = new QPushButton(tr("Discard && Exit"), &dialog);
-		QPushButton *cancelBtn = new QPushButton(tr("取消"), &dialog);
+		QPushButton *cancelBtn = new QPushButton(tr("Cancel"), &dialog);
 
 		buttonLayout->addStretch();
 		buttonLayout->addWidget(discardBtn);

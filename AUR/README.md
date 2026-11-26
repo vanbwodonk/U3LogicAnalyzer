@@ -23,12 +23,12 @@ packages. FX2LAFW/Saleae firmware is bundled, so no separate
 ## Build dependencies (Qt6)
 
 The application builds against Qt6. `qt6-base` and `qt6-svg` are runtime
-dependencies; `qt6-tools` provides `Qt6LinguistTools` for the translations.
+dependencies.
 `makepkg -s` installs them from `depends`/`makedepends`, but CI jobs that run
 `makepkg --nodeps` or reuse a prebuilt container must install them first:
 
 ```bash
-sudo pacman -S --needed --noconfirm qt6-base qt6-svg qt6-tools
+sudo pacman -S --needed --noconfirm qt6-base qt6-svg
 ```
 
 If the build stops with `Could not find a package configuration file provided

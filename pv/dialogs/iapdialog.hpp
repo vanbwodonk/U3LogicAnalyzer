@@ -38,17 +38,17 @@
 #define CMD_IAP_ERASE   0x81    /* 擦除命令 */
 #define CMD_IAP_VERIFY  0x82    /* 校验命令 */
 #define CMD_IAP_END     0x83    /* 结束标志 */
-#define CMD_IAP_SUCC    0x84    /* 成功标志 */
+#define CMD_IAP_SUCC    0x84    /* Success标志 */
 
-/* IAP错误码 */
-#define IAP_ERR_UNKNOWN        0   /* 未知错误 */
+/* IAPError码 */
+#define IAP_ERR_UNKNOWN        0   /* 未知Error */
 #define IAP_ERR_OVERTIME       1   /* 超时 */
 #define IAP_ERR_CHECK          2   /* 校验和不通过 */
-#define IAP_ERR_ADDR           3   /* 地址错误 */
-#define IAP_ERR_ERASE_FAIL     4   /* 擦除失败 */
+#define IAP_ERR_ADDR           3   /* 地址Error */
+#define IAP_ERR_ERASE_FAIL     4   /* 擦除Failure */
 #define IAP_ERR_PROG_NO_ERASE  5   /* 未擦除直接写 */
-#define IAP_ERR_WRITE_FAIL     6   /* 写入失败 */
-#define IAP_ERR_VERIFY         7   /* 校验失败 */
+#define IAP_ERR_WRITE_FAIL     6   /* 写入Failure */
+#define IAP_ERR_VERIFY         7   /* 校验Failure */
 
 #define IAP_DATA_LEN           64  /* IAP数据包长度 */
 #define HID_PACKET_LEN         65  /* HID数据包长度(含ReportID) */
@@ -64,7 +64,7 @@ namespace dialogs {
 class IAPWorker;
 
 /**
- * IAP固件升级
+ * IAPFirmware Update
  *
  */
 class IAPDialog : public QDialog
@@ -95,8 +95,8 @@ public:
 
 Q_SIGNALS:
     /**
-     * 升级完成信号
-     * @param success 是否成功
+     * Update complete信号
+     * @param success 是否Success
      */
     void upgrade_finished(bool success);
 
@@ -123,7 +123,7 @@ private:
     QLineEdit *file_edit_;          /* 文件路径输入框 */
     QPushButton *browse_btn_;       /* 浏览按钮 */
     QPushButton *start_btn_;        /* 开始按钮 */
-    QPushButton *cancel_btn_;       /* 取消按钮 */
+    QPushButton *cancel_btn_;       /* Cancel按钮 */
     QProgressBar *progress_bar_;    /* 进度条 */
     QLabel *status_label_;          /* 状态标签 */
     QTextEdit *log_text_;           /* 日志文本框 */
@@ -196,7 +196,7 @@ private:
 
     void *hid_handle_;              /* hidapi设备句柄 */
     bool already_in_hid_mode_;      /* 设备是否已处于HID模式 */
-    bool cancelled_;                /* 取消标志 */
+    bool cancelled_;                /* Cancel标志 */
     QMutex mutex_;                  /* 互斥锁 */
 };
 

@@ -23,8 +23,6 @@
 #include <typeinfo>
 
 #include <QDebug>
-#include <QDir>
-#include <QLibraryInfo>
 #include <QMessageBox>
 #include <QWidget>
 
@@ -42,7 +40,6 @@
 
 #include "application.hpp"
 #include "config.h"
-#include "globalsettings.hpp"
 
 using std::cout;
 using std::endl;
@@ -69,97 +66,9 @@ Application::Application(int &argc, char* argv[]) :
 	// setOrganizationDomain("sigrok.org");
 }
 
-const QStringList Application::get_languages() const
-{
-	const QStringList files = QDir(":/l10n/").entryList(QStringList("*.qm"), QDir::Files);
-
-	QStringList result;
-
-	// Remove file extensions
-	for (const QString& file : files) {
-		const QString language = file.split(".").front();
-		if (!result.contains(language, Qt::CaseInsensitive))
-			result << language;
-	}
-
-	// English is also available without a .qm file (it is the source
-	// language), but en.qm is shipped to translate the remaining
-	// Chinese-origin strings.
-	if (!result.contains("en", Qt::CaseInsensitive))
-		result << "en";
-
-	result.sort(Qt::CaseInsensitive);
-
-	return result;
-}
-
-const QString Application::get_language_editors(const QString& language) const
-{
-	if (language == "de") return "Sören Apel, Uwe Hermann";
-	if (language == "es_mx") return "Carlos Diaz";
-
-	return QString();
-}
-
 void Application::set_hardware_version(uint64_t hardware_version)
 {
 	hd_version_ = hardware_version;
-}
-
-void Application::switch_language(const QString& language)
-{
-	removeTranslator(&app_translator_);
-	removeTranslator(&en_translator_);
-	removeTranslator(&qt_translator_);
-	removeTranslator(&qtbase_translator_);
-
-	if ((language == "C") || (language == "en")) {
-		// English is the source language for most strings. en.qm also
-		// translates the strings that still originate in Chinese so that
-		// they do not leak into the English UI.
-		if (en_translator_.load(":/l10n/en.qm"))
-			installTranslator(&en_translator_);
-	} else {
-		// For non-Chinese languages, install en.qm first as a fallback so
-		// Chinese-origin strings fall back to English instead of Chinese.
-		if (language != "zh_cn" &&
-				en_translator_.load(":/l10n/en.qm"))
-			installTranslator(&en_translator_);
-
-		// Application translations
-		QString resource = ":/l10n/" + language +".qm";
-		if (app_translator_.load(resource))
-			installTranslator(&app_translator_);
-		else
-			qWarning() << "Translation resource" << resource << "not found";
-
-		// Qt translations
-		QString tr_path(QLibraryInfo::path(QLibraryInfo::TranslationsPath));
-
-		if (qt_translator_.load("qt_" + language, tr_path))
-			installTranslator(&qt_translator_);
-		else
-			qWarning() << "QT translations for" << language << "not found at" <<
-				tr_path << ", Qt translations package is probably missing";
-
-		// Qt base translations
-		if (qtbase_translator_.load("qtbase_" + language, tr_path))
-			installTranslator(&qtbase_translator_);
-		else
-			qWarning() << "QT base translations for" << language << "not found at" <<
-				tr_path << ", Qt translations package is probably missing";
-	}
-
-	// Force LanguageChange event to all widgets for immediate retranslation
-	QEvent lang_event(QEvent::LanguageChange);
-	for (QWidget *widget : topLevelWidgets())
-		QApplication::sendEvent(widget, &lang_event);
-}
-
-void Application::on_setting_changed(const QString &key, const QVariant &value)
-{
-	if (key == pv::GlobalSettings::Key_General_Language)
-		switch_language(value.toString());
 }
 
 void Application::collect_version_info(pv::DeviceManager &device_manager)
