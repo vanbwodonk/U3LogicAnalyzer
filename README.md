@@ -1,309 +1,134 @@
 # U3LogicAnalyzer
 
+U3LogicAnalyzer is a cross-platform PulseView-based host application for
+USB logic analyzers. It keeps the full PulseView/libsigrok driver set and
+adds support for newer analyzers, including WCH CH32H417/CH569 and
+DreamSourceLab DSLogic devices using the v2 protocol.
 
-U3LogicAnalyzer is the PC host software for the CH32H417 / CH569 USB logic
-analyzer, based on PulseView 0.5.0 with a bundled sigrok stack
-(libsigrok + libsigrokdecode). It supports 130 protocol decoders
-(I2C / SPI / UART ...).
+![U3LogicAnalyzer](docs/images/u3logic-analyzer.png)
 
-![U3LogicAnalyzer running on macOS with a CH32H417 analyzer](docs/images/u3logic-analyzer-macos.png)
+## What it is
+
+The application is based on PulseView 0.5.0 and bundles libsigrok,
+libsigrokcxx and libsigrokdecode in-tree. It is not limited to one analyzer:
+the bundled driver stack covers the same broad hardware support as
+PulseView, plus the CH32H417/CH569 and DSLogic v2 additions.
+
+The UI is English-only, uses a dark theme, and includes the sigrok protocol
+decoders, so no external DSView installation is required.
+
+## Supported hardware
+
+- **All PulseView/libsigrok drivers included in the bundled stack**, for
+  example:
+  - Saleae Logic and other FX2LAFW analyzers
+  - DreamSourceLab DSLogic / DSCope
+  - Hantek, ASIX Sigma, Sysclk LWLA, ChronoVu, OLS, and more
+  - Serial/SCPI instruments such as multimeters, power supplies and scopes
+- **WCH CH32H417 and CH569** USB logic analyzers
+- **DreamSourceLab DSLogic v2 protocol** devices:
+  - DSLogic Plus
+  - DSLogic U3Pro16
+  - Other profiles supported by the driver
+
+Some drivers are compiled only when their optional system libraries are
+available. See the build scripts and `libsigrok` driver sources for details.
 
 ## Features
 
-- CH32H417 (USB 3.0, up to 200 MHz sampling) and CH569 hot-plug detection
-- Full libsigrok hardware driver set, including FX2LAFW/Saleae Logic,
-  DreamSourceLab, Hantek, serial DMMs/PSUs, SCPI instruments, and more
-- Bundled DreamSourceLab, FX2LAFW, ASIX Sigma, and Sysclk LWLA1034
-  firmware (see `firmware/README.md`)
-- Hardware-aware Device Options: voltage threshold (DSLogic: 0.0-5.0 V in
-  0.1 V steps), Buffer/Stream mode, RLE, capture ratio, external clock and
-  clock edge
-- DSLogic channel modes: Buffer 4 ch @ 400 MHz / 8 ch @ 200 MHz / 16 ch @
-  100 MHz and Stream 3 ch @ 100 MHz / 6 ch @ 50 MHz / 12 ch @ 25 MHz /
-  16 ch @ 20 MHz
-- For long captures prefer Stream mode: buffer mode uploads only after the
-  acquisition finishes, while stream mode transfers data during acquisition
-  (2 s @ 10 MHz / 16 ch: ~2.0 s stream vs ~3.4 s buffer)
-- Logic traces have per-channel H/L markers and clear row separators. The
-  default logic channel height is 40 px and is configurable in Settings.
-- FX2LAFW devices expose channel modes in Device Options: 8 channels at
-  up to 24 MHz, or 16 channels at up to 12 MHz on 16-bit profiles.
-- Device → Trigger Option provides Simple per-channel triggers and
-  multi-stage Advanced triggers (up to 16 stages). Serial trigger, per-channel
-  invert/counter controls are not supported by the current libsigrok driver.
-- DSLogic buffer depth is enforced in the sample-count list: uncompressed
-  buffer depth is `256 Mbit / channels`, so 400 MHz with 4 channels is limited
-  to 167.77 ms. Enabling RLE extends the available depth.
-  - Windows: CH375 driver mode (CH375DLL)
-  - macOS / Linux: libusb transport inside the driver, no kernel module
-    required (protocol based on WCH's official CH37X_LINUX SDK)
-- IAP firmware-upgrade dialog (HID mode on all platforms;
-  CH375 mode is Windows-only)
-- Software updates through GitHub Releases
-- Protocol-decoder channel-assignment dialog
-- English UI, dark theme, new toolbar icons
-- 130 protocol decoders
-- Decoder auto-discovery - no `SIGROKDECODE_DIR` environment variable needed
-- macOS .app / DMG packaging
-- App name: U3LogicAnalyzer
+- Pan/zoom waveform viewer with per-channel H/L markers and row separators
+- Configurable logic channel height, saved between sessions
+- Device Options with hardware-specific settings:
+  - DSLogic threshold, buffer/stream mode, RLE and channel modes
+  - FX2LAFW 8-channel @ 24 MHz or 16-channel @ 12 MHz modes
+  - WCH thresholds, ADC and channel configuration
+- Trigger Option: simple per-channel trigger and multi-stage advanced trigger
+- 130+ protocol decoders, discovered automatically
+- Bundled firmware for DSLogic, FX2LAFW, ASIX Sigma and Sysclk LWLA1034
+- USB hot-plug detection with automatic detach on unplug
+- Linux, macOS and Windows build scripts; Linux CI builds and runs tests
 
-## Firmware project
+## Build
 
-The firmware project is included in [`firmware`](firmware/), including the APP, IAP, V3F/V5F projects, and generated firmware files.
+Requirements: CMake 3.21+, a C++17 compiler, Qt6 (Widgets, Gui, Svg,
+Network), glib/glibmm-2.4, Boost, libusb, hidapi, libzip and Python 3
+development files. Optional driver dependencies are listed in the build
+script for your platform.
 
-Original project: [OSHWHub - CH32H417 Logic Analyzer](https://oshwhub.com/q2h2/project_bszkxrnf?jlc_vid=E1VbBAYEQQUPUAJWQAVZAQBXRVMMUFdQFFJbAgJVRgcxVlNeQVVdU1JXRFNdUTsOAxUeFF5JWA4dDxMOAgNABAsLWA%3D%3D)
-
-## Complete flow (from scratch)
-
-### Step 1 - Get the sources
-
-The repository is self-contained: `libsigrok` (with the wch-ch32h417 driver
-and the libusb transport) and `libsigrokdecode` (130 decoders) are included
-in-tree:
+Linux:
 
 ```bash
-git clone <repo-url> U3LogicAnalyzer
-cd U3LogicAnalyzer
+./build_linux.sh
+./build_linux.sh --run
+```
+
+macOS:
+
+```bash
 ./build_macos.sh
-```
-
-The build scripts still accept `LIBSIGROK_SRC` / `LIBSIGROKDECODE_SRC` to
-point at alternative source directories (or sibling dirs with the same names).
-
-### Step 2 - Install dependencies
-
-macOS (Homebrew):
-
-```bash
-brew install pkgconf cmake ninja qt glibmm@2.66 glib libusb hidapi \
-             libserialport libftdi nettle libzip boost python@3.14
-```
-
-Linux (Debian/Ubuntu example):
-
-```bash
-    sudo apt install build-essential cmake ninja-build pkg-config \
-      qt6-base-dev libqt6svg6-dev libglib2.0-dev \
-      libglibmm-2.4-dev libusb-1.0-0-dev libserialport-dev \
-      libftdi1-dev libnettle-dev libieee1284-3-dev libbluetooth-dev \
-      libhidapi-dev libzip-dev libboost-dev libboost-filesystem-dev \
-      libboost-serialization-dev python3-dev
-```
-
-### Step 3 - Build
-
-```bash
-./build_macos.sh            # output: build/pulseview_build/LogicAnalyzer
-./build_macos.sh --clean    # full rebuild
-
-# Linux-only alternative
-./build_linux.sh            # output: build/linux/pulseview_build/LogicAnalyzer
-./build_linux.sh --debug    # debug build
-./build_linux.sh --clean --run
-```
-
-### Step 4 - Run
-
-```bash
 ./build_macos.sh --run
-# or: ./build/pulseview_build/LogicAnalyzer
-# hardware debugging: ./build/pulseview_build/LogicAnalyzer -l 5
 ```
 
-Decoders are discovered automatically (no environment variables needed).
-With a device attached, the log should show `Scan found 1 devices
-(wch-ch32h417)` and continuous `Read ... bytes from pipe` lines.
-
-### Step 5 (optional) - Package the macOS app / DMG
+Windows (MSYS2 UCRT64):
 
 ```bash
-./package_app.sh
-./package_app.sh --dmg
-open build/U3LogicAnalyzer.dmg
+./build_windows.sh
 ```
 
-## Windows
+The build installs the bundled libraries and firmware under
+`build/linux/install` or `build/install`. The main binary is
+`build/linux/pulseview_build/LogicAnalyzer` (Linux) or
+`build/pulseview_build/LogicAnalyzer` (macOS).
 
-Build under MSYS2 MINGW64. The companion package's `README_CH32H417.md`
-describes `setup_env.sh` / `build.sh`; the repository also ships
-`build_windows.sh` which produces `build/LogicAnalyzer-win64.zip`
-(exe + DLLs + decoders + run.bat).
+## Firmware and USB access
 
-## CI / releases
+All redistributable firmware is bundled in [`firmware/`](firmware/) and
+installed into `share/sigrok-firmware`. DSView and
+`sigrok-firmware-fx2lafw` are not required.
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) builds macOS /
-Linux / Windows on push to master and pull requests. Pushing a `v*` tag
-(e.g. `git tag v1.1 && git push origin v1.1`) creates a GitHub Release with:
+On Linux, USB access needs the libsigrok udev rules. The AUR package installs
+them automatically; for a local build install:
 
-- `U3LogicAnalyzer.dmg` (macOS installer image)
-- `U3LogicAnalyzer-linux.tar.gz` (Linux binary + decoders; needs system Qt6/glib)
-- `LogicAnalyzer-win64.zip` (Windows portable package)
-
-## Known limitations
-
-- CH375 driver mode is Windows-only; macOS/Linux use the libusb transport.
-- IAP CH375 mode is Windows-only; HID mode works on all platforms.
-
-## Changes vs upstream PulseView
-
-1. U3 customizations: renamed to U3LogicAnalyzer, English UI, CH32H417/CH569
-   support, IAP firmware-upgrade dialog, decoder-channel dialog, dark theme,
-   new toolbar icons.
-   The bundled libsigrok now contains the complete upstream hardware driver
-   set (FX2LAFW/Saleae, DreamSourceLab, Hantek, serial/SCPI instruments, ...)
-   alongside the CH32H417 driver; the GUI scans all drivers.
-2. macOS / Linux enablement:
-   - `build_macos.sh` / `build_windows.sh` / `package_app.sh`
-   - libusb transport layer in `ch375_wrapper.c` (non-Windows), async buffered
-     upload equivalent to the CH375DLL semantics
-   - clang build fixes (missing return types, std::thread member pointer,
-     unconditional Windows API usage, boost_system, -Wl,-Bdynamic)
-   - crash fix: `unit_size_temp` divide-by-zero (16-channel case)
-   - decoder auto-discovery
-3. App renamed to U3LogicAnalyzer (.app bundle, Info.plist, window title).
-
-## FAQ
-
-- Decoder menu empty? Decoders are auto-discovered now; if it is still empty,
-  check `build/install/share/libsigrokdecode/decoders` exists or set
-  `SIGROKDECODE_DIR` and restart.
-- Device not found? Run with `-l 5`; on macOS/Linux the driver uses libusb -
-  confirm the device (VID 1a86, PID 5537) is visible to the OS. FX2LAFW-based
-  analyzers use the bundled firmware; if you run a build from an unusual
-  location, set `SIGROK_FIRMWARE_DIR` to the installed `sigrok-firmware`
-  directory.
-- DSLogic is not detected on Linux and the log says `LIBUSB_ERROR_ACCESS`?
-  USB access requires udev rules. The AUR package installs them to
-  `/usr/lib/udev/rules.d/60-libsigrok.rules` and
-  `61-libsigrok-uaccess.rules`; replug the analyzer after installation. For
-  a build-tree run, install them manually:
-
-  ```bash
-  sudo install -Dm644 libsigrok/contrib/60-libsigrok.rules \
-     /usr/lib/udev/rules.d/60-libsigrok.rules
-  sudo install -Dm644 libsigrok/contrib/61-libsigrok-uaccess.rules \
-     /usr/lib/udev/rules.d/61-libsigrok-uaccess.rules
-  sudo udevadm control --reload-rules
-  sudo udevadm trigger
-  ```
-
-- DreamSourceLab DSLogic not detected, or firmware/FPGA upload fails? All
-  supported DreamSourceLab firmware is bundled in
-  [`firmware/dreamsourcelab/`](firmware/dreamsourcelab) and is installed to
-  `share/sigrok-firmware` by the build. DSView is **not** required. If you run
-  a build from an unusual location, point libsigrok at the bundled directory:
-
-  ```bash
-  export SIGROK_FIRMWARE_DIR="$PWD/firmware/dreamsourcelab"
-  ```
-
-- App fails to launch after packaging? Make sure the Qt6 `macdeployqt` is
-  used (the script pins `/opt/homebrew/opt/qt`) and no stale
-  `build/LogicAnalyzer.app` remains.
-
-## Licensing
-
-The whole project, including the bundled `libsigrok` and `libsigrokdecode`
-trees, is distributed under the GNU GPL v3 or later (GPLv3+); the
-U3-specific driver code (wch-ch32h417, incl. the libusb transport) is
-(C) Q2H2 under GPLv3+. Third-party resources (QDarkStyleSheet, DarkStyle,
-QHexView, ExprTk, Tango icons) retain their own licenses and attributions -
-see "Resource authors and licenses" in the upstream section below.
-
----
-
-## Original upstream README
-
-The sigrok project aims at creating a portable, cross-platform,
-Free/Libre/Open-Source signal analysis software suite that supports various
-device types (such as logic analyzers, oscilloscopes, multimeters, and more).
-
-PulseView is a Qt-based LA/scope/MSO GUI for sigrok.
-
-### Status
-
-PulseView is in a usable state and has had official tarball releases.
-
-### Copyright and license
-
-PulseView is licensed under the terms of the GNU General Public License
-(GPL), version 3 or later.
-
-While some individual source code files are licensed under the GPLv2+, and
-some files are licensed under the GPLv3+ or MIT, this doesn't change the fact
-that the program as a whole is licensed under the terms of the GPLv3+ (e.g.
-also due to the fact that it links against GPLv3+ libraries).
-
-Please see the individual source files for the full list of copyright holders.
-
-### Copyright notices
-
-A copyright notice indicating a range of years, must be interpreted as having
-had copyrightable material added in each of those years.
-
-Example:
-
-```text
-Copyright (C) 2010-2013 Contributor Name
+```bash
+sudo install -Dm644 libsigrok/contrib/60-libsigrok.rules \
+   /usr/lib/udev/rules.d/60-libsigrok.rules
+sudo install -Dm644 libsigrok/contrib/61-libsigrok-uaccess.rules \
+   /usr/lib/udev/rules.d/61-libsigrok-uaccess.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 ```
 
-is to be interpreted as
+Replug the analyzer after installing the rules.
 
-```text
-Copyright (C) 2010,2011,2012,2013 Contributor Name
-```
+Proprietary firmware that cannot be redistributed is not bundled. See
+[`firmware/README.md`](firmware/README.md) for the inventory and extraction
+instructions.
 
-### Resource authors and licenses
+## CI and releases
 
-`icons/application-exit.png`, `icons/document-new.png`,
-`icons/document-open.png`, `icons/document-save-as.png`,
-`icons/edit-paste.svg`, `icons/help-browser.png`,
-`icons/media-playback-pause.png`, `icons/media-playback-start.png`,
-`icons/preferences-system.png`, `icons/search.svg`, `icons/window-new.png`,
-`icons/zoom-fit-best.png`, `icons/zoom-in.png`, `icons/zoom-out.png`:
-Tango Icon Library
+The GitHub Actions workflow builds and tests on Linux. Pushing a `v*` tag
+creates a Linux release archive. macOS and Windows build scripts are kept
+for local use, but are not part of CI.
 
-- <http://tango.freedesktop.org/Tango_Desktop_Project>
-- License: Public Domain
+## Important notice
 
-`icons/information.svg`: Bobarino
+This is an independent community project. It is not affiliated with
+PulseView, sigrok, Saleae, DreamSourceLab or WCH. Hardware behavior and
+signal limits depend on the connected analyzer and its firmware. Verify
+input voltage and wiring before connecting a device. Use at your own risk.
 
-- <https://en.wikipedia.org/wiki/File:Information.svg>
-- License: GFDL 1.2 or later / CC-BY-SA 3.0
+## License
 
-`icons/add-math-channel.svg`: Inductiveload
+This project, including the bundled libsigrok and libsigrokdecode trees, is
+distributed under the GNU General Public License version 3 or later
+(GPLv3+). The WCH-specific driver code is (C) Q2H2 under GPLv3+.
 
-- <https://en.wikipedia.org/wiki/File:Icon_Mathematical_Plot.svg>
-- License: Public Domain
+PulseView is also GPLv3+. Third-party resources (QDarkStyleSheet, DarkStyle,
+QHexView, ExprTk, Tango icons and bundled firmware) retain their own licenses
+and attributions. See the individual source files, `firmware/*/LICENSE` and
+the original PulseView documentation for details.
 
-QDarkStyleSheet: Colin Duquesnoy
+## Credits
 
-- <https://github.com/ColinDuquesnoy/QDarkStyleSheet>
-- License: CC-BY 4.0
-
-DarkStyle: Juergen Skrotzky
-
-- <https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle>
-- License: MIT
-
-QHexView: Victor Anjin
-
-- <https://github.com/virinext/QHexView>
-- License: MIT
-
-ExprTk: Arash Partow
-
-- <https://www.partow.net/programming/exprtk/index.html>
-- License: MIT
-
-### Mailing list
-
-<https://lists.sourceforge.net/lists/listinfo/sigrok-devel>
-
-### IRC
-
-You can find the sigrok developers in the #sigrok IRC channel on Libera.Chat.
-
-### Website
-
-<http://sigrok.org/wiki/PulseView>
+Based on PulseView 0.5.0 and the sigrok project. See the upstream project at
+<https://sigrok.org/> and <https://github.com/sigrokproject/pulseview>.
