@@ -63,7 +63,7 @@ A status value can be identical to the previous command value, so a large
 retry window can misclassify that status as a repeated command. Set this to
 `0` to effectively disable the duplicate-command heuristic.
 
-### Force CWD words within this gap to BC (µs, 0 = off)
+### Force CW words within this gap to BC (µs, 0 = off)
 
 Default: **0** (off).
 
@@ -77,7 +77,6 @@ This is a blunt workaround for controllers that:
 
 Leave it at `0` unless auto mode clearly misclassifies back-to-back commands.
 
-The UI label says **CWD**; in 1553 terminology this is a **command word (CW)**.
 
 ### Minimum RT response start (µs)
 
@@ -109,13 +108,13 @@ bits set.
 
 In `auto` mode the decoder evaluates, in order:
 
-1. Forced BC window (`Force CWD...`)
+1. Forced BC window (`Force CW...`)
 2. Gap shorter than the minimum RT response → BC command
 3. RT-to-RT receive/transmit command pair → BC command
 4. Status reserved bits set → command
 5. Transaction already complete → new BC command
-6. Long idle → new BC command
-7. Status still expected and word is not a legal command → status
+6. Status still expected and word is not a legal command → status
+7. Long idle → new BC command
 8. Exact duplicate of the previous command within the retry window → BC command
 9. Previous word was a status → new BC command
 10. Otherwise → RT status

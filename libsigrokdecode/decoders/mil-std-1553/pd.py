@@ -49,7 +49,7 @@ class Decoder(srd.Decoder):
             'default': 14.0},
         {'id': 'bc_retry_us', 'desc': 'BC duplicate/retry window (us)',
             'default': 14.0},
-        {'id': 'bc_force_us', 'desc': 'Force CWD words within this gap to BC (us, 0=off)',
+        {'id': 'bc_force_us', 'desc': 'Force CW words within this gap to BC (us, 0=off)',
             'default': 0.0},
         {'id': 'response_min_us', 'desc': 'Minimum RT response start (us)',
             'default': 4.0},
@@ -364,16 +364,16 @@ class Decoder(srd.Decoder):
         if self.transaction_closed:
             return 'master'
 
+        # A status is still expected, and this word is not a legal command
+        # (for example 0x1800: receive mode code 0 is undefined). This must
+        # be checked before the idle rule: in an RT-to-RT transfer the first
+        # status can arrive more than idle_bus_us after the second command.
+        if self.expected_status > 0 and not self.is_valid_command(info):
+            return 'slave'
+
         # New message after an idle bus.
         if idle_time >= self.idle_bus_us:
             return 'master'
-
-        # A status is still expected, and this word is not a legal command
-        # (for example 0x1800: receive mode code 0 is undefined). Status and
-        # command values can be identical; keep the status interpretation
-        # instead of applying the duplicate-command retry heuristic below.
-        if self.expected_status > 0 and not self.is_valid_command(info):
-            return 'slave'
 
         # Exact duplicate/retry of the previous command inside the retry
         # window (this is the 9F21 -> 9F21 case).
